@@ -43,7 +43,7 @@ jobs:
         run: |
           npm install -g @aws-amplify/cli
           #./amplify.sh --appid d30wx1kvbjtgdy --envName staging --accessKey "$AWS_ACCESS_KEY_ID" --secretKey "$AWS_SECRET_ACCESS_KEY"
-          
+           
           flutter pub get
           flutter build ios
       
