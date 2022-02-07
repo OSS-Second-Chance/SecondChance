@@ -48,11 +48,11 @@ class DashboardScreen extends StatefulWidget {
   final String title;
 
   @override
-  State<DashboardScreen> createState() => _MyHomePageState();
+  State<DashboardScreen> createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<DashboardScreen> {
-  int _counter = 0;
+class MyHomePageState extends State<DashboardScreen> {
+  int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   @override
   initState() {
@@ -63,14 +63,14 @@ class _MyHomePageState extends State<DashboardScreen> {
     });
   }
 
-  void _incrementCounter() {
+  void incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter++;
+      counter++;
     });
   }
 
@@ -112,14 +112,14 @@ class _MyHomePageState extends State<DashboardScreen> {
               'You have pushed the button this many times:',
             ),
             Text(
-              '$_counter',
+              '$counter',
               style: Theme.of(context).textTheme.headline4,
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: incrementCounter,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
