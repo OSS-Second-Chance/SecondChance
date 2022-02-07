@@ -48,6 +48,7 @@ jobs:
           ./amplify.sh --appid d30wx1kvbjtgdy --envName staging --accessKey "$AWS_ACCESS_KEY_ID" --secretKey "$AWS_SECRET_ACCESS_KEY"
           
           flutter pub get
+          flutter test
           flutter build appbundle
           flutter build apk --split-per-abi
       
