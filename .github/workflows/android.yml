@@ -48,22 +48,16 @@ jobs:
         run: |
           ./amplify.sh --appid d30wx1kvbjtgdy --envName staging --accessKey "$AWS_ACCESS_KEY_ID" --secretKey "$AWS_SECRET_ACCESS_KEY"
           flutter pub get
-          
+      - name: Integration Tests
+        shell: bash
+        run: |
+            chromedriver --port=4444
+            flutter test integration_test
+            
       - name: Run Unit Tests
         shell: bash
         run: flutter test
        
-      - name: Integration Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          target: default
-          arch: x86
-          profile: Nexus 6
-          script: |
-            flutter devices
-            flutter test integration_test
-      
       - name: Build App
         shell: bash
         run: |
