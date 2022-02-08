@@ -49,18 +49,10 @@ jobs:
           ./amplify.sh --appid d30wx1kvbjtgdy --envName staging --accessKey "$AWS_ACCESS_KEY_ID" --secretKey "$AWS_SECRET_ACCESS_KEY"
           flutter pub get
 
-      - name: Setup ChromeDriver
-        uses: nanasess/setup-chromedriver@v1
-        
-      - name: Start ChromeDriver
-        run: |
-          export DISPLAY=:99
-          chromedriver --url-base=/wd/hub --port=4444 &
-          sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
-      
       - name: Integration Tests
         shell: bash
         run: |
+          chromedriver --port=4444 &
           flutter drive \
             --driver=test_driver/integration_test.dart \
             --target=integration_test/amplify_test.dart \
