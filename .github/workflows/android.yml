@@ -6,7 +6,7 @@ name: Android Build
 on:
   pull_request:
     branches: [ main ]
-   push:
+  push:
      branches: [editProfile, Lucas]
 
   # Allows you to run this workflow manually from the Actions tab
