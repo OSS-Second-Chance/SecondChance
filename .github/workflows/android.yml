@@ -7,6 +7,8 @@ on:
   # Triggers the workflow on push or pull request events but only for the Lucas branch
   pull_request:
     branches: [ main ]
+  push:
+    branches: [editProfile]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -49,6 +51,12 @@ jobs:
           flutter test
           flutter build appbundle
           flutter build apk --split-per-abi
+        
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test --coverage
       
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
