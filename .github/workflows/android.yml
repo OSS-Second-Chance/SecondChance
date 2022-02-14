@@ -53,9 +53,6 @@ jobs:
           flutter build appbundle
           flutter build apk --split-per-abi
 
-          flutter build appbundle
-          flutter build apk --split-per-abi
-
       - name: Run Integration Tests
         shell: bash
         run: |
