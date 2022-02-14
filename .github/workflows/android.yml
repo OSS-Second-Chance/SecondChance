@@ -4,9 +4,10 @@ name: Android Build
 
 # Controls when the workflow will run
 on:
-  # only run on main PR
   pull_request:
     branches: [ main ]
+#   push:
+#     branches: [editProfile]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -35,8 +36,7 @@ jobs:
       - name: Setup Amplify
         shell: bash
         run: npm install -g @aws-amplify/cli@7.6.15
-      
-      # Build the android artifacts
+
       - name: Configure Environment
         shell: bash
         env:
@@ -47,7 +47,16 @@ jobs:
           ./amplify.sh --appid d30wx1kvbjtgdy --envName staging --accessKey "$AWS_ACCESS_KEY_ID" --secretKey "$AWS_SECRET_ACCESS_KEY"
           flutter pub get
 
-      - name: Integration Tests
+      - name: Build App
+        shell: bash
+        run: |
+          flutter build appbundle
+          flutter build apk --split-per-abi
+
+          flutter build appbundle
+          flutter build apk --split-per-abi
+
+      - name: Run Integration Tests
         shell: bash
         run: |
           chromedriver --port=4444 &
@@ -58,23 +67,25 @@ jobs:
             
       - name: Run Unit Tests
         shell: bash
-        run: flutter test
+        run: flutter test --coverage
        
-      - name: Build App
-        shell: bash
-        run: |
-          flutter build appbundle
-          flutter build apk --split-per-abi
-      
-      - name: Upload Artifacts
+#       - name: Analyze
+#         run: flutter analyze
+
+      - name: Upload Android Binaries
         uses: actions/upload-artifact@v2
         with:
           name: android-builds
           path: |
             build/app/outputs/bundle/release/app-release.aab
             build/app/outputs/flutter-apk/
-  
-  # release build artifacts        
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: |
+            coverage/
+
+  # release build artifacts
   # TODO
-          
-      
