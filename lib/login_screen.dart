@@ -1,3 +1,4 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'amplify.dart';
@@ -32,9 +33,18 @@ class _LoginState extends State<LoginScreen> {
 
   Future<String?> _signupUser(SignupData data) async {
     debugPrint('Signup Email: ${data.name}, Password: ${data.password}, Name: ${data.additionalSignupData!["Name"]}' );
-    amplifyState.signUp(data.name.toString(), data.password.toString(), data.additionalSignupData!["Name"].toString());
-    return Future.delayed(loginTime).then((_) {
-      return null;
+    return amplifyState.signUp(data.name.toString(),
+        data.password.toString(),
+        data.additionalSignupData!["Name"].toString())
+        .then((result) {
+            debugPrint("In signup Future return");
+            debugPrint("result: " + result);
+            if (result == "SuccessfulSignup") {
+              return null;
+            }
+            else {
+              return result;
+            }
     });
   }
 

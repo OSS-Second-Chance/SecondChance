@@ -16,12 +16,6 @@ class AmplifyState {
 
   void verifyLogin(BuildContext context, AmplifyState amplifyState) async {
     try {
-      while(!isAmplifyConfigured)
-        {
-          Future.delayed(const Duration(milliseconds: 500), () {
-            debugPrint("Waiting on amplifyConfigure...");
-          });
-        }
       if (isAmplifyConfigured) {
         debugPrint("in verifyLogin: Amplify is configured");
         final awsUser = await Amplify.Auth.getCurrentUser();
@@ -61,7 +55,7 @@ class AmplifyState {
     }
   }
 
-  void signUp(String email, String password, String name) async {
+  Future<String> signUp(String email, String password, String name) async {
     try {
       Map<CognitoUserAttributeKey, String> userInfo = {
         CognitoUserAttributeKey.name: name,
@@ -74,8 +68,12 @@ class AmplifyState {
               userAttributes: userInfo
           )
       );
+
+      return "SuccessfulSignup";
     } on AuthException catch (e) {
+      debugPrint("In AuthException for signUp");
       debugPrint(e.message);
+      return e.message;
     }
 
   }

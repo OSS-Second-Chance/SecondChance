@@ -59,7 +59,7 @@ class MyHomePageState extends State<DashboardScreen> {
   initState() {
     super.initState();
     amplifyState.configureAmplify();
-    Future.delayed(const Duration(milliseconds: 1000), () {
+    Future.delayed(const Duration(milliseconds: 5000), () {
       amplifyState.verifyLogin(context, amplifyState);
     });
   }
