@@ -55,13 +55,11 @@ class DashboardScreen extends StatefulWidget {
 class MyHomePageState extends State<DashboardScreen> {
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
+  String userButton = "Sign Out";
   @override
   initState() {
     super.initState();
-    amplifyState.configureAmplify();
-    Future.delayed(const Duration(milliseconds: 5000), () {
-      amplifyState.verifyLogin(context, amplifyState);
-    });
+    amplifyState.configureAmplify(context, amplifyState, this);
   }
 
   void incrementCounter() {
@@ -72,6 +70,19 @@ class MyHomePageState extends State<DashboardScreen> {
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
       counter++;
+    });
+  }
+
+  void setUserState() {
+    setState(() {
+      bool test = amplifyState.getLoggedIn();
+      debugPrint("in set user state, logged in: $test");
+      if (amplifyState.getLoggedIn()) {
+        userButton = "Sign Out";
+      }
+      else {
+        userButton = "Sign In";
+      }
     });
   }
 
@@ -88,6 +99,21 @@ class MyHomePageState extends State<DashboardScreen> {
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
+        actions: <Widget>[
+          Padding(
+          padding: const EdgeInsets.only(right: 20.0),
+          child: GestureDetector(
+            onTap: () {
+              if (amplifyState.getLoggedIn()) {
+                amplifyState.signOut();
+              }
+              else {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen(key: null, amplifyState: amplifyState)));
+              }
+            },
+            child: Text(userButton)
+          )
+          )],
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it

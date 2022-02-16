@@ -32,9 +32,18 @@ class _LoginState extends State<LoginScreen> {
   }
 
   Future<String?> _authUser(LoginData data) {
-    debugPrint('Name: ${data.name}, Password: ${data.password}');
-    return Future.delayed(loginTime).then((_) {
-      return "User: " + data.name;
+    debugPrint(
+        'Signin Email: ${data.name}, Password: ${data.password}');
+    return amplifyState
+        .loginUser(data.name.toString(), data.password.toString())
+        .then((result) {
+      debugPrint("In authUser Future return");
+      debugPrint("result: " + result);
+      if (result == "SuccessfulLogin") {
+        return null;
+      } else {
+        return result;
+      }
     });
   }
 
@@ -48,10 +57,38 @@ class _LoginState extends State<LoginScreen> {
       debugPrint("In signup Future return");
       debugPrint("result: " + result);
       if (result == "SuccessfulSignup") {
-        createUser(data);
         return null;
       } else {
         return result;
+      }
+    });
+  }
+
+  Future<String?>? _confirmSignUp(String code, LoginData data) async {
+    debugPrint(
+        'in confirmSignUp error: $code data: $data');
+
+    String error = '';
+    amplifyState
+        .confirmSignUp(data.name.toString(), code.toString())
+        .then((result) {
+      debugPrint("In confirmsignup Future return");
+      debugPrint("result: " + result);
+      if (result == "SuccessfulConfirmation") {
+
+        //createUser(data);
+        amplifyState.loginUser(data.name.toString(), data.password.toString())
+        .then((loginResult) {
+          if (loginResult == "SuccessfulLogin") {
+            return null;
+          }
+          else {
+
+            error += "Login Error: " + loginResult;
+          }
+        });
+      } else {
+        error += "\nSignup Error: " + result;
       }
     });
   }
@@ -63,15 +100,24 @@ class _LoginState extends State<LoginScreen> {
     });
   }
 
+  String? _passwordValidator(String? password) {
+    //Fillout STUFF
+    return null;
+    //return string error message on failed validation
+
+  }
   @override
   Widget build(BuildContext context) {
     return FlutterLogin(
       title: 'SecondChance',
       onLogin: _authUser,
       onSignup: _signupUser,
+      onConfirmSignup: _confirmSignUp,
+      passwordValidator: _passwordValidator,
       additionalSignupFields:
           List<UserFormField>.filled(1, const UserFormField(keyName: "Name")),
       onSubmitAnimationCompleted: () {
+
         Navigator.of(context).popUntil((route) => route.isFirst);
       },
       onRecoverPassword: _recoverPassword,
