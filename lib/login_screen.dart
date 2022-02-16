@@ -1,7 +1,16 @@
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
+import 'package:amplify_core/amplify_core.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+
 import 'amplify.dart';
+import 'main.dart';
+import 'amplifyconfiguration.dart';
+import 'models/ModelProvider.dart';
+import 'models/UserModel.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+import 'amplifyconfiguration.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key, required this.amplifyState}) : super(key: key);
@@ -10,8 +19,6 @@ class LoginScreen extends StatefulWidget {
 
   @override
   State<LoginScreen> createState() => _LoginState();
-
-
 }
 
 class _LoginState extends State<LoginScreen> {
@@ -32,19 +39,20 @@ class _LoginState extends State<LoginScreen> {
   }
 
   Future<String?> _signupUser(SignupData data) async {
-    debugPrint('Signup Email: ${data.name}, Password: ${data.password}, Name: ${data.additionalSignupData!["Name"]}' );
-    return amplifyState.signUp(data.name.toString(),
-        data.password.toString(),
-        data.additionalSignupData!["Name"].toString())
+    debugPrint(
+        'Signup Email: ${data.name}, Password: ${data.password}, Name: ${data.additionalSignupData!["Name"]}');
+    return amplifyState
+        .signUp(data.name.toString(), data.password.toString(),
+            data.additionalSignupData!["Name"].toString())
         .then((result) {
-            debugPrint("In signup Future return");
-            debugPrint("result: " + result);
-            if (result == "SuccessfulSignup") {
-              return null;
-            }
-            else {
-              return result;
-            }
+      debugPrint("In signup Future return");
+      debugPrint("result: " + result);
+      if (result == "SuccessfulSignup") {
+        createUser(data);
+        return null;
+      } else {
+        return result;
+      }
     });
   }
 
@@ -61,11 +69,44 @@ class _LoginState extends State<LoginScreen> {
       title: 'SecondChance',
       onLogin: _authUser,
       onSignup: _signupUser,
-      additionalSignupFields: List<UserFormField>.filled(1, const UserFormField(keyName: "Name")),
+      additionalSignupFields:
+          List<UserFormField>.filled(1, const UserFormField(keyName: "Name")),
       onSubmitAnimationCompleted: () {
         Navigator.of(context).popUntil((route) => route.isFirst);
       },
       onRecoverPassword: _recoverPassword,
     );
+  }
+
+  void createUser(SignupData data) async {
+    try {
+      SignInResult res = await Amplify.Auth.signIn(
+        username: data.name.toString(),
+        password: data.password.toString(),
+      );
+    } on AuthException catch (e) {
+      print(e.message);
+    }
+
+    debugPrint("Creating User");
+    AuthUser? curUser;
+    try {
+      curUser = await Amplify.Auth.getCurrentUser();
+      debugPrint(curUser.username);
+      debugPrint("-----");
+    } on AuthException catch (e) {
+      debugPrint(e.message);
+    }
+    // final _testID = 'abc';
+    final currentUser = UserModel(
+        id: data.name, Name: data.additionalSignupData!["Name"].toString());
+
+    try {
+      await Amplify.DataStore.save(currentUser);
+
+      print('Saved ${currentUser.toString()}');
+    } catch (e) {
+      print(e);
+    }
   }
 }
