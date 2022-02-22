@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
-
+// import 'package:amplify_api/amplify_api.dart';
 
 void main() {
   runApp(const MyApp());
@@ -79,8 +79,7 @@ class MyHomePageState extends State<DashboardScreen> {
       debugPrint("in set user state, logged in: $test");
       if (amplifyState.getLoggedIn()) {
         userButton = "Sign Out";
-      }
-      else {
+      } else {
         userButton = "Sign In";
       }
     });
@@ -101,19 +100,21 @@ class MyHomePageState extends State<DashboardScreen> {
         title: Text(widget.title),
         actions: <Widget>[
           Padding(
-          padding: const EdgeInsets.only(right: 20.0),
-          child: GestureDetector(
-            onTap: () {
-              if (amplifyState.getLoggedIn()) {
-                amplifyState.signOut();
-              }
-              else {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen(key: null, amplifyState: amplifyState)));
-              }
-            },
-            child: Text(userButton)
-          )
-          )],
+              padding: const EdgeInsets.only(right: 20.0),
+              child: GestureDetector(
+                  onTap: () {
+                    if (amplifyState.getLoggedIn()) {
+                      amplifyState.signOut();
+                    } else {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => LoginScreen(
+                                  key: null, amplifyState: amplifyState)));
+                    }
+                  },
+                  child: Text(userButton)))
+        ],
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
