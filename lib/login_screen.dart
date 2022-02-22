@@ -51,7 +51,8 @@ class _LoginState extends State<LoginScreen> {
         'Signup Email: ${data.name}, Password: ${data.password}, Name: ${data.additionalSignupData!["Name"]}');
     return amplifyState
         .signUp(data.name.toString(), data.password.toString(),
-            data.additionalSignupData!["Name"].toString())
+            data.additionalSignupData!["Name"].toString(),
+            )
         .then((result) {
       debugPrint("In signup Future return");
       debugPrint("result: " + result);
@@ -105,14 +106,17 @@ class _LoginState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    List<UserFormField> additionalAttributes = List<UserFormField>.filled(4, const UserFormField(keyName: "Name")) ;
+    additionalAttributes[1] = const UserFormField(keyName: "Number");
+    additionalAttributes[2] = const UserFormField(keyName: "Gender");
+    additionalAttributes[3] = const UserFormField(keyName: "BirthDate");
     return FlutterLogin(
       title: 'SecondChance',
       onLogin: _authUser,
       onSignup: _signupUser,
       onConfirmSignup: _confirmSignUp,
       passwordValidator: _passwordValidator,
-      additionalSignupFields:
-          List<UserFormField>.filled(1, const UserFormField(keyName: "Name")),
+      additionalSignupFields: additionalAttributes,
       onSubmitAnimationCompleted: () {
         Navigator.of(context).popUntil((route) => route.isFirst);
       },
