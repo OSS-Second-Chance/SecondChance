@@ -48,15 +48,18 @@ class _LoginState extends State<LoginScreen> {
 
   Future<String?> _signupUser(SignupData data) async {
     debugPrint(
-        'Signup Email: ${data.name}, Password: ${data.password}, Name: ${data.additionalSignupData!["Name"]}');
+        'Signup Email: ${data.name}, Password: ${data.password}, Name: ${data.additionalSignupData!["Name"]}, BirthDate: ${data.additionalSignupData!["BirthDate"]}');
     return amplifyState
-        .signUp(data.name.toString(), data.password.toString(),
-            data.additionalSignupData!["Name"].toString(),
-            )
+        .signUp(
+      data.name.toString(),
+      data.password.toString(),
+      data.additionalSignupData!["Name"].toString(),
+    )
         .then((result) {
       debugPrint("In signup Future return");
       debugPrint("result: " + result);
       if (result == "SuccessfulSignup") {
+        createUser(data);
         return null;
       } else {
         return result;
@@ -79,7 +82,9 @@ class _LoginState extends State<LoginScreen> {
             .loginUser(data.name.toString(), data.password.toString())
             .then((loginResult) {
           if (loginResult == "SuccessfulLogin") {
-            createUser();
+            // debugPrint("HERE XXXXXX");
+            debugPrint(data.toString());
+
             return null;
           } else {
             error += "Login Error: " + loginResult;
@@ -106,7 +111,8 @@ class _LoginState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List<UserFormField> additionalAttributes = List<UserFormField>.filled(4, const UserFormField(keyName: "Name")) ;
+    List<UserFormField> additionalAttributes =
+        List<UserFormField>.filled(4, const UserFormField(keyName: "Name"));
     additionalAttributes[1] = const UserFormField(keyName: "Number");
     additionalAttributes[2] = const UserFormField(keyName: "Gender");
     additionalAttributes[3] = const UserFormField(keyName: "BirthDate");
@@ -124,49 +130,38 @@ class _LoginState extends State<LoginScreen> {
     );
   }
 
-  void createUser() async {
-    debugPrint("Creating User");
+  void createUser(SignupData data) async {
+    // debugPrint("Creating User");
     AuthUser? curUser;
-    String _name = '';
-    String _email = '';
-    String _gender = '';
-    String _birthday = '';
+    String? _name = data.additionalSignupData!["Name"];
+    String? _email = data.name;
+    String? _gender = data.additionalSignupData!["Gender"];
+    String? _birthdate = data.additionalSignupData!["BirthDate"];
+    String? _phoneNumber = data.additionalSignupData!["Number"];
 
     try {
       curUser = await Amplify.Auth.getCurrentUser();
+      // debugPrint("ASGDHRJYJHGREFWGRH");
       debugPrint(curUser.username);
-      debugPrint(curUser.userId);
-
-      // debugPrint(curUser.name)
-      debugPrint("-----");
+      // debugPrint("ASGDHRJYJHGREFWGRH");
     } on AuthException catch (e) {
       debugPrint(e.message);
     }
 
-    try {
-      var res = await Amplify.Auth.fetchUserAttributes();
-      res.forEach((element) {
-        print('key: ${element.userAttributeKey}; value: ${element.value}');
-        if (element.userAttributeKey.toString() == 'name') {
-          _name = element.value;
-        }
-        if (element.userAttributeKey.toString() == 'email') {
-          _email = element.value;
-        }
-        if (element.userAttributeKey.toString() == 'birthday') {
-          _birthday = element.value;
-        }
-        if (element.userAttributeKey.toString() == 'gender') {
-          _gender = element.value;
-        }
-      });
-    } on AuthException catch (e) {
-      print(e.message);
-    }
-    // var res = await Amplify.Auth.fetchUserAttributes();
-    final _testID = 'abc';
-    final currentUser =
-        UserModel(id: curUser?.userId, Name: _name, Gender: _gender);
+    // try {
+    //   if(_birthdate):
+    //     int _age = calculateAge(_birthdate);
+    // } on AuthException catch (e) {
+    //   debugPrint(e.message);
+    // }
+
+    final currentUser = UserModel(
+        id: curUser?.userId,
+        Name: _name,
+        Gender: _gender,
+        Email: _email,
+        Birthday: _birthdate,
+        PhoneNumber: _phoneNumber);
 
     try {
       await Amplify.DataStore.save(currentUser);
@@ -177,10 +172,13 @@ class _LoginState extends State<LoginScreen> {
     }
 
     //Test EditProfile Functionality
-    readAll();
-    final userProfile = getUserProfile();
-    updateProfileAttribute('Name', 'NewName Test');
-    final userProfile2 = getUserProfile();
+    // readAll();
+    // final userProfile = getUserProfile();
+    // updateProfileAttribute('Gender', 'Male');
+    // debugPrint("Get User profile XXXXXX");
+    // final userProfile2 = getUserProfile();
+    // clearLocalDataStore();
+    // debugPrint("Get User profile");
   }
 
   //Test to read entire User List, ignore in production
@@ -260,5 +258,31 @@ class _LoginState extends State<LoginScreen> {
     } catch (e) {
       print(e);
     }
+  }
+
+  void clearLocalDataStore() async {
+    try {
+      debugPrint("WARNING: Clearing DB");
+      await Amplify.DataStore.clear();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  int calculateAge(DateTime birthDate) {
+    DateTime currentDate = DateTime.now();
+    int age = currentDate.year - birthDate.year;
+    int month1 = currentDate.month;
+    int month2 = birthDate.month;
+    if (month2 > month1) {
+      age--;
+    } else if (month1 == month2) {
+      int day1 = currentDate.day;
+      int day2 = birthDate.day;
+      if (day2 > day1) {
+        age--;
+      }
+    }
+    return age;
   }
 }
