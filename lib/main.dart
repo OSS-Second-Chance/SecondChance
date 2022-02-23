@@ -28,9 +28,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const DashboardScreen(title: "SecondChance"),
-      //routes: {
-        //'dashboard': (context) => const DashboardScreen(title: "SecondChance"),
-     // },
+      routes: {
+        'dashboard': (context) => const DashboardScreen(title: "SecondChance"),
+      },
     );
   }
 }
@@ -56,14 +56,12 @@ class MyHomePageState extends State<DashboardScreen> {
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
-  /*
+
   @override
   initState() {
     super.initState();
     amplifyState.configureAmplify(context, amplifyState, this);
   }
-
-   */
 
   void setUserState() {
     setState(() {
@@ -80,23 +78,27 @@ class MyHomePageState extends State<DashboardScreen> {
 
 
   Widget _buildLocations() {
+    var location_list = ["Harry's", "Brother's", "Twisted Hammer"];
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: 20,
+      itemCount: (location_list.length * 2),
       itemBuilder: (context, i) {
         if (i.isOdd) {
           return const Divider();
         }
 
         final index = i ~/ 2;
-        return _buildRow("Location" + (index + 1).toString());
+        return _buildRow(location_list[index]);
       },
     );
   }
 
   Widget _buildRow(String title) {
     return ListTile(
-        title: Text(title)
+        title: Text(title),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => LocationPage(location: title)));
+        }
     );
   }
 
@@ -112,8 +114,6 @@ class MyHomePageState extends State<DashboardScreen> {
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: const Text('Second Chance')
-        /*
         title: Text(widget.title),
         actions: <Widget>[
           Padding(
@@ -130,9 +130,25 @@ class MyHomePageState extends State<DashboardScreen> {
             child: Text(userButton)
           )
           )],
-         */
       ),
       body: _buildLocations(),
+    );
+  }
+}
+
+// Location page class, will move to another file once it's less bare-bones
+
+class LocationPage extends StatelessWidget {
+  const LocationPage({Key? key, required this.location}) : super(key: key);
+
+  final String location;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(location),
+      ),
     );
   }
 }
