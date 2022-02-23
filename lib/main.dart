@@ -56,21 +56,11 @@ class MyHomePageState extends State<DashboardScreen> {
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
+
   @override
   initState() {
     super.initState();
     amplifyState.configureAmplify(context, amplifyState, this);
-  }
-
-  void incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      counter++;
-    });
   }
 
   void setUserState() {
@@ -83,6 +73,32 @@ class MyHomePageState extends State<DashboardScreen> {
         userButton = "Sign In";
       }
     });
+  }
+
+
+  Widget _buildLocations() {
+    var location_list = ["Harry's", "Brother's", "Twisted Hammer"];
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: (location_list.length * 2),
+      itemBuilder: (context, i) {
+        if (i.isOdd) {
+          return const Divider();
+        }
+
+        final index = i ~/ 2;
+        return _buildRow(location_list[index]);
+      },
+    );
+  }
+
+  Widget _buildRow(String title) {
+    return ListTile(
+        title: Text(title),
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => LocationPage(location: title)));
+        }
+    );
   }
 
   @override
@@ -116,41 +132,24 @@ class MyHomePageState extends State<DashboardScreen> {
                   child: Text(userButton)))
         ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
+      body: _buildLocations(),
+    );
+  }
+}
+
+// Location page class, will move to another file once it's less bare-bones
+
+class LocationPage extends StatelessWidget {
+  const LocationPage({Key? key, required this.location}) : super(key: key);
+
+  final String location;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(location),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
