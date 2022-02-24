@@ -9,6 +9,8 @@ import 'main.dart';
 import 'amplifyconfiguration.dart';
 import 'models/ModelProvider.dart';
 import 'models/UserModel.dart';
+import 'models/Location.dart';
+import 'models/Match.dart';
 import 'package:amplify_datastore/amplify_datastore.dart';
 import 'amplifyconfiguration.dart';
 
@@ -22,6 +24,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginState extends State<LoginScreen> {
+  GlobalKey<_LoginState> _myKey = GlobalKey();
   Duration get loginTime => Duration(milliseconds: 2250);
   late AmplifyState amplifyState;
 
@@ -182,12 +185,26 @@ class _LoginState extends State<LoginScreen> {
   }
 
   //Test to read entire User List, ignore in production
-  void readAll() async {
+  void readAllUsers() async {
     try {
       final allUsers = await Amplify.DataStore.query(UserModel.classType);
 
       debugPrint("Test readall()");
       debugPrint(allUsers.toString());
+      debugPrint(allUsers.toString());
+      debugPrint("----");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  static void readAllLocations() async {
+    try {
+      List<Location> locations =
+          await Amplify.DataStore.query(Location.classType);
+
+      debugPrint("Test readall() Locations");
+      debugPrint(locations.toString());
       debugPrint("----");
     } catch (e) {
       print(e);

@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
-// import 'package:amplify_api/amplify_api.dart';
+import 'package:flutter_login/flutter_login.dart';
+import 'package:amplify_core/amplify_core.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 
+import 'amplifyconfiguration.dart';
+import 'models/ModelProvider.dart';
+import 'models/UserModel.dart';
+import 'models/Location.dart';
+import 'models/Match.dart';
+import 'package:amplify_datastore/amplify_datastore.dart';
+import 'amplifyconfiguration.dart';
+import 'dart:async';
+
+// import 'package:amplify_api/amplify_api.dart';
+// import _LoginState;
 void main() {
   runApp(const MyApp());
 }
@@ -56,6 +70,7 @@ class MyHomePageState extends State<DashboardScreen> {
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
+  // var locationList = <Location>[].obs;
 
   @override
   initState() {
@@ -75,30 +90,55 @@ class MyHomePageState extends State<DashboardScreen> {
     });
   }
 
+  Future<List<Location>> getAllLocations() async {
+    try {
+      List<Location> locations =
+          await Amplify.DataStore.query(Location.classType);
+
+      return (locations);
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
 
   Widget _buildLocations() {
-    var location_list = ["Harry's", "Brother's", "Twisted Hammer"];
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: (location_list.length * 2),
-      itemBuilder: (context, i) {
-        if (i.isOdd) {
-          return const Divider();
-        }
+    Future<List<Location>> locations = getAllLocations();
+    return FutureBuilder<List<Location>>(
+        future: locations,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasData) {
+            print(snapshot.data.toString());
+            return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: (snapshot.data!.length * 2),
+                itemBuilder: (context, i) {
+                  if (i.isOdd) {
+                    return const Divider();
+                  }
 
-        final index = i ~/ 2;
-        return _buildRow(location_list[index]);
-      },
-    );
+                  final index = i ~/ 2;
+                  return _buildRow(snapshot.data![index].BarName);
+                });
+          } else {
+            return Container(
+              child: Text('Loading'),
+            );
+          }
+        });
   }
 
   Widget _buildRow(String title) {
     return ListTile(
         title: Text(title),
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => LocationPage(location: title)));
-        }
-    );
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => LocationPage(location: title)));
+        });
   }
 
   @override
@@ -144,11 +184,77 @@ class LocationPage extends StatelessWidget {
 
   final String location;
 
+  Future<List<UserModel>> getAllUsers() async {
+    try {
+      List<UserModel> allUsers =
+          await Amplify.DataStore.query(UserModel.classType);
+
+      return (allUsers);
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(location),
+      ),
+      body: _buildLocation(),
+    );
+  }
+
+  Widget _buildLocation() {
+    Future<List<UserModel>> allUsers = getAllUsers();
+    return FutureBuilder<List<UserModel>>(
+        future: allUsers,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasData) {
+            print(snapshot.data.toString());
+            return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: (snapshot.data!.length * 2),
+                itemBuilder: (context, i) {
+                  if (i.isOdd) {
+                    return const Divider();
+                  }
+
+                  final index = i ~/ 2;
+                  return _buildRow(
+                      context, snapshot.data![index].Name.toString());
+                });
+          } else {
+            return Container(
+              child: Text('Loading'),
+            );
+          }
+        });
+  }
+
+  Widget _buildRow(BuildContext context, String title) {
+    return ListTile(
+        title: Text(title),
+        onTap: () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => MatchPage(user: title)));
+        });
+  }
+}
+
+class MatchPage extends StatelessWidget {
+  const MatchPage({Key? key, required this.user}) : super(key: key);
+
+  final String user;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(user),
       ),
     );
   }

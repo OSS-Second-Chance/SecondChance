@@ -23,18 +23,16 @@ import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_inte
 import 'package:flutter/foundation.dart';
 
 
-/** This is an auto generated class representing the UserModel type in your schema. */
+/** This is an auto generated class representing the Match type in your schema. */
 @immutable
-class UserModel extends Model {
-  static const classType = const _UserModelModelType();
+class Match extends Model {
+  static const classType = const _MatchModelType();
   final String id;
-  final String? _Name;
-  final String? _Email;
-  final String? _PhoneNumber;
-  final String? _Gender;
-  final String? _Birthday;
-  final int? _Age;
-  final String? _Bio;
+  final String? _User1ID;
+  final String? _User1Name;
+  final String? _User2ID;
+  final String? _User2Name;
+  final String? _Location;
   final TemporalDateTime? _createdAt;
   final TemporalDateTime? _updatedAt;
 
@@ -46,32 +44,24 @@ class UserModel extends Model {
     return id;
   }
   
-  String? get Name {
-    return _Name;
+  String? get User1ID {
+    return _User1ID;
   }
   
-  String? get Email {
-    return _Email;
+  String? get User1Name {
+    return _User1Name;
   }
   
-  String? get PhoneNumber {
-    return _PhoneNumber;
+  String? get User2ID {
+    return _User2ID;
   }
   
-  String? get Gender {
-    return _Gender;
+  String? get User2Name {
+    return _User2Name;
   }
   
-  String? get Birthday {
-    return _Birthday;
-  }
-  
-  int? get Age {
-    return _Age;
-  }
-  
-  String? get Bio {
-    return _Bio;
+  String? get Location {
+    return _Location;
   }
   
   TemporalDateTime? get createdAt {
@@ -82,18 +72,16 @@ class UserModel extends Model {
     return _updatedAt;
   }
   
-  const UserModel._internal({required this.id, Name, Email, PhoneNumber, Gender, Birthday, Age, Bio, createdAt, updatedAt}): _Name = Name, _Email = Email, _PhoneNumber = PhoneNumber, _Gender = Gender, _Birthday = Birthday, _Age = Age, _Bio = Bio, _createdAt = createdAt, _updatedAt = updatedAt;
+  const Match._internal({required this.id, User1ID, User1Name, User2ID, User2Name, Location, createdAt, updatedAt}): _User1ID = User1ID, _User1Name = User1Name, _User2ID = User2ID, _User2Name = User2Name, _Location = Location, _createdAt = createdAt, _updatedAt = updatedAt;
   
-  factory UserModel({String? id, String? Name, String? Email, String? PhoneNumber, String? Gender, String? Birthday, int? Age, String? Bio}) {
-    return UserModel._internal(
+  factory Match({String? id, String? User1ID, String? User1Name, String? User2ID, String? User2Name, String? Location}) {
+    return Match._internal(
       id: id == null ? UUID.getUUID() : id,
-      Name: Name,
-      Email: Email,
-      PhoneNumber: PhoneNumber,
-      Gender: Gender,
-      Birthday: Birthday,
-      Age: Age,
-      Bio: Bio);
+      User1ID: User1ID,
+      User1Name: User1Name,
+      User2ID: User2ID,
+      User2Name: User2Name,
+      Location: Location);
   }
   
   bool equals(Object other) {
@@ -103,15 +91,13 @@ class UserModel extends Model {
   @override
   bool operator ==(Object other) {
     if (identical(other, this)) return true;
-    return other is UserModel &&
+    return other is Match &&
       id == other.id &&
-      _Name == other._Name &&
-      _Email == other._Email &&
-      _PhoneNumber == other._PhoneNumber &&
-      _Gender == other._Gender &&
-      _Birthday == other._Birthday &&
-      _Age == other._Age &&
-      _Bio == other._Bio;
+      _User1ID == other._User1ID &&
+      _User1Name == other._User1Name &&
+      _User2ID == other._User2ID &&
+      _User2Name == other._User2Name &&
+      _Location == other._Location;
   }
   
   @override
@@ -121,15 +107,13 @@ class UserModel extends Model {
   String toString() {
     var buffer = new StringBuffer();
     
-    buffer.write("UserModel {");
+    buffer.write("Match {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("Name=" + "$_Name" + ", ");
-    buffer.write("Email=" + "$_Email" + ", ");
-    buffer.write("PhoneNumber=" + "$_PhoneNumber" + ", ");
-    buffer.write("Gender=" + "$_Gender" + ", ");
-    buffer.write("Birthday=" + "$_Birthday" + ", ");
-    buffer.write("Age=" + (_Age != null ? _Age!.toString() : "null") + ", ");
-    buffer.write("Bio=" + "$_Bio" + ", ");
+    buffer.write("User1ID=" + "$_User1ID" + ", ");
+    buffer.write("User1Name=" + "$_User1Name" + ", ");
+    buffer.write("User2ID=" + "$_User2ID" + ", ");
+    buffer.write("User2Name=" + "$_User2Name" + ", ");
+    buffer.write("Location=" + "$_Location" + ", ");
     buffer.write("createdAt=" + (_createdAt != null ? _createdAt!.format() : "null") + ", ");
     buffer.write("updatedAt=" + (_updatedAt != null ? _updatedAt!.format() : "null"));
     buffer.write("}");
@@ -137,45 +121,39 @@ class UserModel extends Model {
     return buffer.toString();
   }
   
-  UserModel copyWith({String? id, String? Name, String? Email, String? PhoneNumber, String? Gender, String? Birthday, int? Age, String? Bio}) {
-    return UserModel._internal(
+  Match copyWith({String? id, String? User1ID, String? User1Name, String? User2ID, String? User2Name, String? Location}) {
+    return Match._internal(
       id: id ?? this.id,
-      Name: Name ?? this.Name,
-      Email: Email ?? this.Email,
-      PhoneNumber: PhoneNumber ?? this.PhoneNumber,
-      Gender: Gender ?? this.Gender,
-      Birthday: Birthday ?? this.Birthday,
-      Age: Age ?? this.Age,
-      Bio: Bio ?? this.Bio);
+      User1ID: User1ID ?? this.User1ID,
+      User1Name: User1Name ?? this.User1Name,
+      User2ID: User2ID ?? this.User2ID,
+      User2Name: User2Name ?? this.User2Name,
+      Location: Location ?? this.Location);
   }
   
-  UserModel.fromJson(Map<String, dynamic> json)  
+  Match.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _Name = json['Name'],
-      _Email = json['Email'],
-      _PhoneNumber = json['PhoneNumber'],
-      _Gender = json['Gender'],
-      _Birthday = json['Birthday'],
-      _Age = (json['Age'] as num?)?.toInt(),
-      _Bio = json['Bio'],
+      _User1ID = json['User1ID'],
+      _User1Name = json['User1Name'],
+      _User2ID = json['User2ID'],
+      _User2Name = json['User2Name'],
+      _Location = json['Location'],
       _createdAt = json['createdAt'] != null ? TemporalDateTime.fromString(json['createdAt']) : null,
       _updatedAt = json['updatedAt'] != null ? TemporalDateTime.fromString(json['updatedAt']) : null;
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'Name': _Name, 'Email': _Email, 'PhoneNumber': _PhoneNumber, 'Gender': _Gender, 'Birthday': _Birthday, 'Age': _Age, 'Bio': _Bio, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
+    'id': id, 'User1ID': _User1ID, 'User1Name': _User1Name, 'User2ID': _User2ID, 'User2Name': _User2Name, 'Location': _Location, 'createdAt': _createdAt?.format(), 'updatedAt': _updatedAt?.format()
   };
 
-  static final QueryField ID = QueryField(fieldName: "userModel.id");
-  static final QueryField NAME = QueryField(fieldName: "Name");
-  static final QueryField EMAIL = QueryField(fieldName: "Email");
-  static final QueryField PHONENUMBER = QueryField(fieldName: "PhoneNumber");
-  static final QueryField GENDER = QueryField(fieldName: "Gender");
-  static final QueryField BIRTHDAY = QueryField(fieldName: "Birthday");
-  static final QueryField AGE = QueryField(fieldName: "Age");
-  static final QueryField BIO = QueryField(fieldName: "Bio");
+  static final QueryField ID = QueryField(fieldName: "match.id");
+  static final QueryField USER1ID = QueryField(fieldName: "User1ID");
+  static final QueryField USER1NAME = QueryField(fieldName: "User1Name");
+  static final QueryField USER2ID = QueryField(fieldName: "User2ID");
+  static final QueryField USER2NAME = QueryField(fieldName: "User2Name");
+  static final QueryField LOCATION = QueryField(fieldName: "Location");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
-    modelSchemaDefinition.name = "UserModel";
-    modelSchemaDefinition.pluralName = "UserModels";
+    modelSchemaDefinition.name = "Match";
+    modelSchemaDefinition.pluralName = "Matches";
     
     modelSchemaDefinition.authRules = [
       AuthRule(
@@ -191,43 +169,31 @@ class UserModel extends Model {
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: UserModel.NAME,
+      key: Match.USER1ID,
       isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: UserModel.EMAIL,
+      key: Match.USER1NAME,
       isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: UserModel.PHONENUMBER,
+      key: Match.USER2ID,
       isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: UserModel.GENDER,
+      key: Match.USER2NAME,
       isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: UserModel.BIRTHDAY,
-      isRequired: false,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: UserModel.AGE,
-      isRequired: false,
-      ofType: ModelFieldType(ModelFieldTypeEnum.int)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: UserModel.BIO,
+      key: Match.LOCATION,
       isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
@@ -248,11 +214,11 @@ class UserModel extends Model {
   });
 }
 
-class _UserModelModelType extends ModelType<UserModel> {
-  const _UserModelModelType();
+class _MatchModelType extends ModelType<Match> {
+  const _MatchModelType();
   
   @override
-  UserModel fromJson(Map<String, dynamic> jsonData) {
-    return UserModel.fromJson(jsonData);
+  Match fromJson(Map<String, dynamic> jsonData) {
+    return Match.fromJson(jsonData);
   }
 }
