@@ -162,7 +162,7 @@ SPEC CHECKSUMS:
   Starscream: 5178aed56b316f13fa3bc55694e583d35dd414d9
   SwiftFormat: a3b79e8b5f8ecdec7a716b998aee230d08512894
   SwiftLint: 6bc52a21f0fd44cab9aa2dc8e534fb9f5e3ec507
-  url_launcher_ios: 02f1989d4e14e998335b02b67a7590fa34f971af
+  url_launcher_ios: 839c58cdb4279282219f5e248c3321761ff3c4de
 
 PODFILE CHECKSUM: 30517025a2fecca2d72dac25f08abb5b9a8f1a56
 

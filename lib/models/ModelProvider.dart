@@ -20,15 +20,19 @@
 // ignore_for_file: public_member_api_docs, file_names, unnecessary_new, prefer_if_null_operators, prefer_const_constructors, slash_for_doc_comments, annotate_overrides, non_constant_identifier_names, unnecessary_string_interpolations, prefer_adjacent_string_concatenation, unnecessary_const, dead_code
 
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
+import 'Location.dart';
+import 'Match.dart';
 import 'UserModel.dart';
 
+export 'Location.dart';
+export 'Match.dart';
 export 'UserModel.dart';
 
 class ModelProvider implements ModelProviderInterface {
   @override
-  String version = "e6ba85169740547bf061138a79047a9e";
+  String version = "4cc46f44bbd2205c74fe4180e280b434";
   @override
-  List<ModelSchema> modelSchemas = [UserModel.schema];
+  List<ModelSchema> modelSchemas = [Location.schema, Match.schema, UserModel.schema];
   static final ModelProvider _instance = ModelProvider();
   @override
   List<ModelSchema> customTypeSchemas = [];
@@ -37,6 +41,10 @@ class ModelProvider implements ModelProviderInterface {
   
   ModelType getModelTypeByModelName(String modelName) {
     switch(modelName) {
+      case "Location":
+        return Location.classType;
+      case "Match":
+        return Match.classType;
       case "UserModel":
         return UserModel.classType;
       default:

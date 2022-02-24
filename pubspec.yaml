@@ -43,6 +43,9 @@ dependencies:
   # For age Retrieval
   flutter_cupertino_date_picker: ^1.0.26+2
   intl: ^0.17.0
+  # obs_websocket_dart: ^0.0.2
+  # web_socket_channel: ^2.1.0
+  get: ^4.6.1
   
 dev_dependencies:
   flutter_test:
