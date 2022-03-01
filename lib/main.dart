@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
+import 'profile_page.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:amplify_core/amplify_core.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
@@ -70,6 +71,7 @@ class MyHomePageState extends State<DashboardScreen> {
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
+
   // var locationList = <Location>[].obs;
 
   @override
@@ -93,7 +95,7 @@ class MyHomePageState extends State<DashboardScreen> {
   Future<List<Location>> getAllLocations() async {
     try {
       List<Location> locations =
-          await Amplify.DataStore.query(Location.classType);
+      await Amplify.DataStore.query(Location.classType);
 
       return (locations);
     } catch (e) {
@@ -149,30 +151,49 @@ class MyHomePageState extends State<DashboardScreen> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-        actions: <Widget>[
-          Padding(
-              padding: const EdgeInsets.only(right: 20.0),
-              child: GestureDetector(
-                  onTap: () {
-                    if (amplifyState.getLoggedIn()) {
-                      amplifyState.signOut();
-                    } else {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => LoginScreen(
-                                  key: null, amplifyState: amplifyState)));
-                    }
-                  },
-                  child: Text(userButton)))
-        ],
-      ),
-      body: _buildLocations(),
+    return MaterialApp(
+        home: DefaultTabController(
+            length: 2,
+            child: Scaffold(
+                appBar: AppBar(
+                  bottom: const TabBar(
+                    tabs: [
+                      Tab(text:"Locations"),
+                      Tab(text:"Profile"),
+                    ],
+                  ),
+
+                  // Here we take the value from the MyHomePage object that was created by
+                  // the App.build method, and use it to set our appbar title.
+                  title: Text(widget.title),
+                  actions: <Widget>[
+                    Padding(
+                        padding: const EdgeInsets.only(right: 20.0),
+                        child: GestureDetector(
+                            onTap: () {
+                              if (amplifyState.getLoggedIn()) {
+                                amplifyState.signOut();
+                              } else {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            LoginScreen(
+                                                key: null,
+                                                amplifyState: amplifyState)));
+                              }
+                            },
+                            child: Text(userButton)))
+                  ],
+                ),
+                body: TabBarView(
+                    children: [
+                      _buildLocations(),
+                      const ProfilePage()
+                    ]
+                )
+            )
+        )
     );
   }
 }
@@ -187,7 +208,7 @@ class LocationPage extends StatelessWidget {
   Future<List<UserModel>> getAllUsers() async {
     try {
       List<UserModel> allUsers =
-          await Amplify.DataStore.query(UserModel.classType);
+      await Amplify.DataStore.query(UserModel.classType);
 
       return (allUsers);
     } catch (e) {
