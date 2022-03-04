@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
 import 'profile_page.dart';
+import 'match_page.dart';
+import 'messaging_page.dart';
+import 'location_page.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:amplify_core/amplify_core.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
@@ -95,7 +98,7 @@ class MyHomePageState extends State<DashboardScreen> {
   Future<List<Location>> getAllLocations() async {
     try {
       List<Location> locations =
-      await Amplify.DataStore.query(Location.classType);
+          await Amplify.DataStore.query(Location.classType);
 
       return (locations);
     } catch (e) {
@@ -153,13 +156,27 @@ class MyHomePageState extends State<DashboardScreen> {
     // than having to individually change instances of widgets.
     return MaterialApp(
         home: DefaultTabController(
-            length: 2,
+            length: 4,
             child: Scaffold(
                 appBar: AppBar(
                   bottom: const TabBar(
                     tabs: [
-                      Tab(text:"Locations"),
-                      Tab(text:"Profile"),
+                      Tab(
+                        // text: "Locations",
+                        icon: Icon(Icons.location_on_sharp),
+                      ),
+                      Tab(
+                        // text: "Matches",
+                        icon: Icon(Icons.social_distance_outlined),
+                      ),
+                      Tab(
+                        // text: "Messages",
+                        icon: Icon(Icons.messenger_rounded),
+                      ),
+                      Tab(
+                        // text: "Profile",
+                        icon: Icon(Icons.settings_accessibility),
+                      ),
                     ],
                   ),
 
@@ -177,106 +194,39 @@ class MyHomePageState extends State<DashboardScreen> {
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) =>
-                                            LoginScreen(
-                                                key: null,
-                                                amplifyState: amplifyState)));
+                                        builder: (context) => LoginScreen(
+                                            key: null,
+                                            amplifyState: amplifyState)));
                               }
                             },
                             child: Text(userButton)))
                   ],
                 ),
-                body: TabBarView(
-                    children: [
-                      _buildLocations(),
-                      const ProfilePage()
-                    ]
-                )
-            )
-        )
-    );
+                // bottomNavigationBar: menu(),
+                body: TabBarView(children: [
+                  _buildLocations(),
+                  const MatchPage(),
+                  const MessagingPage(),
+                  const ProfilePage()
+                ]))));
   }
 }
 
 // Location page class, will move to another file once it's less bare-bones
 
-class LocationPage extends StatelessWidget {
-  const LocationPage({Key? key, required this.location}) : super(key: key);
 
-  final String location;
 
-  Future<List<UserModel>> getAllUsers() async {
-    try {
-      List<UserModel> allUsers =
-      await Amplify.DataStore.query(UserModel.classType);
+// class MatchPage extends StatelessWidget {
+//   const MatchPage({Key? key, required this.user}) : super(key: key);
 
-      return (allUsers);
-    } catch (e) {
-      print(e);
-      throw e;
-    }
-  }
+//   final String user;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(location),
-      ),
-      body: _buildLocation(),
-    );
-  }
-
-  Widget _buildLocation() {
-    Future<List<UserModel>> allUsers = getAllUsers();
-    return FutureBuilder<List<UserModel>>(
-        future: allUsers,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
-            return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(
-                      context, snapshot.data![index].Name.toString());
-                });
-          } else {
-            return Container(
-              child: Text('Loading'),
-            );
-          }
-        });
-  }
-
-  Widget _buildRow(BuildContext context, String title) {
-    return ListTile(
-        title: Text(title),
-        onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => MatchPage(user: title)));
-        });
-  }
-}
-
-class MatchPage extends StatelessWidget {
-  const MatchPage({Key? key, required this.user}) : super(key: key);
-
-  final String user;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(user),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(user),
+//       ),
+//     );
+//   }
+// }
