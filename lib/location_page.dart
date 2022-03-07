@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:second_chance/models/Location.dart';
 import 'main.dart';
 import 'models/UserModel.dart';
 import 'amplify.dart';
 import 'dart:async';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'match_page.dart';
+import 'view_profile_page.dart';
+import 'messaging_page.dart';
+import 'profile_page.dart';
 
 class LocationPage extends StatelessWidget {
   const LocationPage({Key? key, required this.location}) : super(key: key);
 
-  final String location;
+  final Location location;
 
   Future<List<UserModel>> getAllUsers() async {
     try {
@@ -25,12 +29,40 @@ class LocationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(location),
-      ),
-      body: _buildLocation(),
-    );
+    return MaterialApp(
+        home: DefaultTabController(
+            length: 4,
+            child: Scaffold(
+                appBar: AppBar(
+                  title: Text(location.BarName.toString()),
+                  bottom: const TabBar(
+                    tabs: [
+                      Tab(
+                        // text: "Locations",
+                        icon: Icon(Icons.location_on_sharp),
+                      ),
+                      Tab(
+                        // text: "Matches",
+                        icon: Icon(Icons.social_distance_outlined),
+                      ),
+                      Tab(
+                        // text: "Messages",
+                        icon: Icon(Icons.messenger_rounded),
+                      ),
+                      Tab(
+                        // text: "Profile",
+                        icon: Icon(Icons.settings_accessibility),
+                      ),
+                    ],
+                  ),
+                ),
+                // bottomNavigationBar: menu(),
+                body: TabBarView(children: [
+                  _buildLocation(),
+                  const MatchPage(),
+                  const MessagingPage(),
+                  const ProfilePage()
+                ]))));
   }
 
   Widget _buildLocation() {
@@ -51,8 +83,7 @@ class LocationPage extends StatelessWidget {
                   }
 
                   final index = i ~/ 2;
-                  return _buildRow(
-                      context, snapshot.data![index].Name.toString());
+                  return _buildRow(context, snapshot.data![index]);
                 });
           } else {
             return Container(
@@ -62,12 +93,24 @@ class LocationPage extends StatelessWidget {
         });
   }
 
-  Widget _buildRow(BuildContext context, String title) {
-    return ListTile(
-        title: Text(title),
-        onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const MatchPage()));
-        });
+  Widget _buildRow(BuildContext context, UserModel thisUser) {
+    return Card(
+        child: ListTile(
+            leading: Icon(Icons.person, color: Colors.black, size: 50),
+            title: Text(
+              thisUser.Name.toString(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            subtitle: Text(thisUser.Gender.toString()),
+            trailing:
+                Icon(Icons.person_add_alt_1, color: Colors.black, size: 40),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ViewProfilePage(
+                            viewUser: thisUser,
+                          )));
+            }));
   }
 }

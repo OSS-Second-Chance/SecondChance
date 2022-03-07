@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Second Chance',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -125,7 +125,7 @@ class MyHomePageState extends State<DashboardScreen> {
                   }
 
                   final index = i ~/ 2;
-                  return _buildRow(snapshot.data![index].BarName);
+                  return _buildRow(snapshot.data![index]);
                 });
           } else {
             return Container(
@@ -135,15 +135,24 @@ class MyHomePageState extends State<DashboardScreen> {
         });
   }
 
-  Widget _buildRow(String title) {
-    return ListTile(
-        title: Text(title),
-        onTap: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => LocationPage(location: title)));
-        });
+  Widget _buildRow(Location curLocation) {
+    return Card(
+        child: ListTile(
+            leading: Icon(Icons.wine_bar, color: Colors.black, size: 50),
+            title: Text(
+              curLocation.BarName.toString(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            subtitle: Text(curLocation.Region.toString()),
+            trailing: Icon(Icons.add_location_alt_sharp,
+                color: Colors.orange, size: 40),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          LocationPage(location: curLocation)));
+            }));
   }
 
   @override
