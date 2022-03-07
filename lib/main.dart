@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
+import 'profile_page.dart';
+import 'match_page.dart';
+import 'messaging_page.dart';
+import 'location_page.dart';
 import 'package:flutter_login/flutter_login.dart';
 import 'package:amplify_core/amplify_core.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
@@ -28,7 +32,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Second Chance',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -70,6 +74,7 @@ class MyHomePageState extends State<DashboardScreen> {
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
+
   // var locationList = <Location>[].obs;
 
   @override
@@ -120,7 +125,7 @@ class MyHomePageState extends State<DashboardScreen> {
                   }
 
                   final index = i ~/ 2;
-                  return _buildRow(snapshot.data![index].BarName);
+                  return _buildRow(snapshot.data![index]);
                 });
           } else {
             return Container(
@@ -130,15 +135,24 @@ class MyHomePageState extends State<DashboardScreen> {
         });
   }
 
-  Widget _buildRow(String title) {
-    return ListTile(
-        title: Text(title),
-        onTap: () {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => LocationPage(location: title)));
-        });
+  Widget _buildRow(Location curLocation) {
+    return Card(
+        child: ListTile(
+            leading: Icon(Icons.wine_bar, color: Colors.black, size: 50),
+            title: Text(
+              curLocation.BarName.toString(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            subtitle: Text(curLocation.Region.toString()),
+            trailing: Icon(Icons.add_location_alt_sharp,
+                color: Colors.orange, size: 40),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          LocationPage(location: curLocation)));
+            }));
   }
 
   @override
@@ -149,113 +163,79 @@ class MyHomePageState extends State<DashboardScreen> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-        actions: <Widget>[
-          Padding(
-              padding: const EdgeInsets.only(right: 20.0),
-              child: GestureDetector(
-                  onTap: () {
-                    if (amplifyState.getLoggedIn()) {
-                      amplifyState.signOut();
-                    } else {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => LoginScreen(
-                                  key: null, amplifyState: amplifyState)));
-                    }
-                  },
-                  child: Text(userButton)))
-        ],
-      ),
-      body: _buildLocations(),
-    );
+    return MaterialApp(
+        home: DefaultTabController(
+            length: 4,
+            child: Scaffold(
+                appBar: AppBar(
+                  bottom: const TabBar(
+                    tabs: [
+                      Tab(
+                        // text: "Locations",
+                        icon: Icon(Icons.location_on_sharp),
+                      ),
+                      Tab(
+                        // text: "Matches",
+                        icon: Icon(Icons.social_distance_outlined),
+                      ),
+                      Tab(
+                        // text: "Messages",
+                        icon: Icon(Icons.messenger_rounded),
+                      ),
+                      Tab(
+                        // text: "Profile",
+                        icon: Icon(Icons.settings_accessibility),
+                      ),
+                    ],
+                  ),
+
+                  // Here we take the value from the MyHomePage object that was created by
+                  // the App.build method, and use it to set our appbar title.
+                  title: Text(widget.title),
+                  actions: <Widget>[
+                    Padding(
+                        padding: const EdgeInsets.only(right: 20.0),
+                        child: GestureDetector(
+                            onTap: () {
+                              if (amplifyState.getLoggedIn()) {
+                                amplifyState.signOut();
+                              } else {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => LoginScreen(
+                                            key: null,
+                                            amplifyState: amplifyState)));
+                              }
+                            },
+                            child: Text(userButton)))
+                  ],
+                ),
+                // bottomNavigationBar: menu(),
+                body: TabBarView(children: [
+                  _buildLocations(),
+                  const MatchPage(),
+                  const MessagingPage(),
+                  const ProfilePage()
+                ]))));
   }
 }
 
 // Location page class, will move to another file once it's less bare-bones
 
-class LocationPage extends StatelessWidget {
-  const LocationPage({Key? key, required this.location}) : super(key: key);
 
-  final String location;
 
-  Future<List<UserModel>> getAllUsers() async {
-    try {
-      List<UserModel> allUsers =
-          await Amplify.DataStore.query(UserModel.classType);
+// class MatchPage extends StatelessWidget {
+//   const MatchPage({Key? key, required this.user}) : super(key: key);
 
-      return (allUsers);
-    } catch (e) {
-      print(e);
-      throw e;
-    }
-  }
+//   final String user;
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(location),
-      ),
-      body: _buildLocation(),
-    );
-  }
-
-  Widget _buildLocation() {
-    Future<List<UserModel>> allUsers = getAllUsers();
-    return FutureBuilder<List<UserModel>>(
-        future: allUsers,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
-            return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(
-                      context, snapshot.data![index].Name.toString());
-                });
-          } else {
-            return Container(
-              child: Text('Loading'),
-            );
-          }
-        });
-  }
-
-  Widget _buildRow(BuildContext context, String title) {
-    return ListTile(
-        title: Text(title),
-        onTap: () {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => MatchPage(user: title)));
-        });
-  }
-}
-
-class MatchPage extends StatelessWidget {
-  const MatchPage({Key? key, required this.user}) : super(key: key);
-
-  final String user;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(user),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(user),
+//       ),
+//     );
+//   }
+// }
