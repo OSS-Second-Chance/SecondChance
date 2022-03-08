@@ -1,15 +1,12 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
-
 import 'package:flutter/material.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:second_chance/main.dart';
 import 'amplifyconfiguration.dart';
 import 'login_screen.dart';
 import 'models/ModelProvider.dart';
-
 import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:amplify_datastore/amplify_datastore.dart';
-
 import 'package:amplify_api/amplify_api.dart';
 
 class AmplifyState {
@@ -138,6 +135,154 @@ class AmplifyState {
     } catch (e) {
       print(e);
       throw e;
+    }
+  }
+
+  void createUser(String? name, String? email, String? gender, String? birthdate, String? phoneNumber) async {
+    // debugPrint("Creating User");
+    AuthUser? curUser;
+
+    try {
+      curUser = await Amplify.Auth.getCurrentUser();
+      // debugPrint("ASGDHRJYJHGREFWGRH");
+      debugPrint(curUser.username);
+      // debugPrint("ASGDHRJYJHGREFWGRH");
+    } on AuthException catch (e) {
+      debugPrint(e.message);
+    }
+
+    // try {
+    //   if(_birthdate):
+    //     int _age = calculateAge(_birthdate);
+    // } on AuthException catch (e) {
+    //   debugPrint(e.message);
+    // }
+
+    final currentUser = UserModel(
+        id: curUser?.userId,
+        Name: name,
+        Gender: gender,
+        Email: email,
+        Birthday: birthdate,
+        PhoneNumber: phoneNumber);
+
+    try {
+      await Amplify.DataStore.save(currentUser);
+
+      print('Saved ${currentUser.toString()}');
+    } catch (e) {
+      print(e);
+    }
+
+    //Test EditProfile Functionality
+    // readAll();
+    // final userProfile = getUserProfile();
+    // updateProfileAttribute('Gender', 'Male');
+    // debugPrint("Get User profile XXXXXX");
+    // final userProfile2 = getUserProfile();
+    // clearLocalDataStore();
+    // debugPrint("Get User profile");
+  }
+
+  //Test to read entire User List, ignore in production
+  void readAllUsers() async {
+    try {
+      final allUsers = await Amplify.DataStore.query(UserModel.classType);
+
+      debugPrint("Test readall()");
+      debugPrint(allUsers.toString());
+      debugPrint(allUsers.toString());
+      debugPrint("----");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  static void readAllLocations() async {
+    try {
+      List<Location> locations =
+      await Amplify.DataStore.query(Location.classType);
+
+      debugPrint("Test readall() Locations");
+      debugPrint(locations.toString());
+      debugPrint("----");
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<UserModel> getUserProfile() async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final activeUsers = await Amplify.DataStore.query(UserModel.classType,
+          where: UserModel.ID.eq(activeID));
+
+      if (activeUsers.isEmpty) {
+        debugPrint("No objects with ID: $activeID");
+        // return null;
+      }
+
+      final activeUser = activeUsers.first;
+      debugPrint("Test getUserProfile()");
+      debugPrint(activeUser.toString());
+      debugPrint("----");
+
+      return activeUser;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
+  void updateProfileAttribute(String attr, String newValue) async {
+    try {
+      final userToUpdate = await getUserProfile();
+      UserModel updatedUser = userToUpdate;
+      if (attr == 'Name') {
+        updatedUser = userToUpdate.copyWith(Name: newValue);
+      } else if (attr == 'Birthday') {
+        updatedUser = userToUpdate.copyWith(Birthday: newValue);
+      } else if (attr == 'Gender') {
+        updatedUser = userToUpdate.copyWith(Gender: newValue);
+      }
+      // if(attr == 'Age')
+      // {
+      //    userToUpdate.copyWith(Age: newValue);
+      // }
+      // if(attr == 'Email')
+      // {
+      //    userToUpdate.copyWith(Email: newValue);
+      // }
+
+      await Amplify.DataStore.save(updatedUser);
+
+      print('Updated user profile to ${updatedUser.toString()}');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void deleteProfile() async {
+    try {
+      final userToBeDeleted = await getUserProfile();
+
+      await Amplify.DataStore.delete(userToBeDeleted);
+
+      print('Deleted user with Name: ${userToBeDeleted.Name}');
+      print('Deleted user with ID: ${userToBeDeleted.id}');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void clearLocalDataStore() async {
+    try {
+      debugPrint("WARNING: Clearing DB");
+      await Amplify.DataStore.clear();
+    } catch (e) {
+      print(e);
     }
   }
 }
