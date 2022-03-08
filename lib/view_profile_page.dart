@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:second_chance/amplify.dart';
 import 'models/UserModel.dart';
+// import 'models/Match.dart';
 import 'match_page.dart';
 import 'messaging_page.dart';
 import 'profile_page.dart';
 import 'amplify.dart';
 
 class ViewProfilePage extends StatefulWidget {
-  const ViewProfilePage({Key? key, required this.viewUser, required this.amplifyState}) : super(key: key);
+  const ViewProfilePage(
+      {Key? key, required this.viewUser, required this.amplifyState})
+      : super(key: key);
 
   final UserModel viewUser;
   final AmplifyState amplifyState;
   @override
-  _ViewProfilePage createState() => _ViewProfilePage(viewUser);
+  _ViewProfilePage createState() => _ViewProfilePage(viewUser, amplifyState);
 }
 
 class _ViewProfilePage extends State<ViewProfilePage> {
-  _ViewProfilePage(this.viewUser);
+  _ViewProfilePage(this.viewUser, this.amplifyState);
   final UserModel viewUser;
+  final AmplifyState amplifyState;
+
   @override
   Widget build(BuildContext context) {
+    amplifyState.createMatch(viewUser);
     return MaterialApp(
         home: DefaultTabController(
             length: 4,

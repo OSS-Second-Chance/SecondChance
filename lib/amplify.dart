@@ -16,6 +16,11 @@ class AmplifyState {
   bool loggedIn = false;
   final picker = ImagePicker();
   var profilePicture = NetworkImage("AHHH");
+  late String? name;
+  late String? email;
+  late String? gender;
+  late String? birthdate;
+  late String? number;
   late MyHomePageState homePageState;
   // final AmplifyDataStore _amplifyDataStore = AmplifyDataStore(
   //   modelProvider: ModelProvider.instance,
@@ -140,7 +145,7 @@ class AmplifyState {
   Future<List<UserModel>> getAllUsers() async {
     try {
       List<UserModel> allUsers =
-      await Amplify.DataStore.query(UserModel.classType);
+          await Amplify.DataStore.query(UserModel.classType);
 
       return (allUsers);
     } catch (e) {
@@ -149,33 +154,27 @@ class AmplifyState {
     }
   }
 
-  void createUser(String? name, String? email, String? gender, String? birthdate, String? phoneNumber) async {
+  void createUser() async {
     // debugPrint("Creating User");
     AuthUser? curUser;
 
     try {
       curUser = await Amplify.Auth.getCurrentUser();
-      // debugPrint("ASGDHRJYJHGREFWGRH");
+      debugPrint("ASGDHRJYJHGREFWGRH");
       debugPrint(curUser.username);
-      // debugPrint("ASGDHRJYJHGREFWGRH");
+      debugPrint("ASGDHRJYJHGREFWGRH");
     } on AuthException catch (e) {
       debugPrint(e.message);
     }
 
-    // try {
-    //   if(_birthdate):
-    //     int _age = calculateAge(_birthdate);
-    // } on AuthException catch (e) {
-    //   debugPrint(e.message);
-    // }
-
     final currentUser = UserModel(
         id: curUser?.userId,
+        AuthUsername: curUser?.userId,
         Name: name,
         Gender: gender,
         Email: email,
         Birthday: birthdate,
-        PhoneNumber: phoneNumber);
+        PhoneNumber: number);
 
     try {
       await Amplify.DataStore.save(currentUser);
@@ -212,7 +211,7 @@ class AmplifyState {
   static void readAllLocations() async {
     try {
       List<Location> locations =
-      await Amplify.DataStore.query(Location.classType);
+          await Amplify.DataStore.query(Location.classType);
 
       debugPrint("Test readall() Locations");
       debugPrint(locations.toString());
@@ -225,7 +224,7 @@ class AmplifyState {
   Future<List<Location>> getAllLocations() async {
     try {
       List<Location> locations =
-      await Amplify.DataStore.query(Location.classType);
+          await Amplify.DataStore.query(Location.classType);
 
       return (locations);
     } catch (e) {
@@ -240,7 +239,7 @@ class AmplifyState {
       curUser = await Amplify.Auth.getCurrentUser();
       final activeID = curUser.userId;
       final activeUsers = await Amplify.DataStore.query(UserModel.classType,
-          where: UserModel.ID.eq(activeID));
+          where: UserModel.AUTHUSERNAME.eq(activeID));
 
       if (activeUsers.isEmpty) {
         debugPrint("No objects with ID: $activeID");
@@ -298,6 +297,31 @@ class AmplifyState {
     } catch (e) {
       print(e);
     }
+  }
+
+  void createMatch(UserModel viewUser) async {
+    getUserProfile().then((curUser) {
+      debugPrint('HERE XXXXX');
+      debugPrint(curUser.Name.toString());
+      debugPrint(viewUser.Name.toString());
+
+      final newMatch = Match(
+        User1Name: curUser.Name,
+        User1ID: curUser.AuthUsername,
+        User1Check: true,
+        User2Name: viewUser.Name,
+        User2ID: viewUser.AuthUsername,
+        User2Check: true,
+      );
+
+      try {
+        Amplify.DataStore.save(newMatch);
+        print(
+            'New Match between ${newMatch.User1Name} and ${newMatch.User2Name}');
+      } catch (e) {
+        print(e);
+      }
+    });
   }
 
   void clearLocalDataStore() async {

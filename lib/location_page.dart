@@ -97,7 +97,7 @@ class LocationPage extends StatelessWidget {
                   MaterialPageRoute(
                       builder: (context) => ViewProfilePage(
                             viewUser: thisUser,
-                            amplifyState: amplifyState
+                            amplifyState: amplifyState,
                           )));
             }));
   }
