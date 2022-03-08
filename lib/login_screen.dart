@@ -50,11 +50,11 @@ class _LoginState extends State<LoginScreen> {
       debugPrint("In signup Future return");
       debugPrint("result: " + result);
       if (result == "SuccessfulSignup") {
-        amplifyState.createUser(data.additionalSignupData!["Name"],
-            data.name,
-            data.additionalSignupData!["Gender"],
-            data.additionalSignupData!["BirthDate"],
-            data.additionalSignupData!["Number"]);
+        amplifyState.name = data.additionalSignupData!["Name"];
+        amplifyState.email = data.name;
+        amplifyState.gender = data.additionalSignupData!["Gender"];
+        amplifyState.birthdate = data.additionalSignupData!["BirthDate"];
+        amplifyState.number = data.additionalSignupData!["Number"];
         return null;
       } else {
         return result;
@@ -78,6 +78,7 @@ class _LoginState extends State<LoginScreen> {
             .then((loginResult) {
           if (loginResult == "SuccessfulLogin") {
             // debugPrint("HERE XXXXXX");
+            amplifyState.createUser();
             debugPrint(data.toString());
 
             return null;
@@ -124,8 +125,6 @@ class _LoginState extends State<LoginScreen> {
       onRecoverPassword: _recoverPassword,
     );
   }
-
-
 
   int calculateAge(DateTime birthDate) {
     DateTime currentDate = DateTime.now();
