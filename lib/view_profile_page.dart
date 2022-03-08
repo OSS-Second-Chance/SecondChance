@@ -3,11 +3,13 @@ import 'models/UserModel.dart';
 import 'match_page.dart';
 import 'messaging_page.dart';
 import 'profile_page.dart';
+import 'amplify.dart';
 
 class ViewProfilePage extends StatefulWidget {
-  const ViewProfilePage({Key? key, required this.viewUser}) : super(key: key);
+  const ViewProfilePage({Key? key, required this.viewUser, required this.amplifyState}) : super(key: key);
 
   final UserModel viewUser;
+  final AmplifyState amplifyState;
   @override
   _ViewProfilePage createState() => _ViewProfilePage(viewUser);
 }

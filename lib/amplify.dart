@@ -8,10 +8,14 @@ import 'models/ModelProvider.dart';
 import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:amplify_datastore/amplify_datastore.dart';
 import 'package:amplify_api/amplify_api.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class AmplifyState {
   bool isAmplifyConfigured = false;
   bool loggedIn = false;
+  final picker = ImagePicker();
+  var profilePicture = NetworkImage("AHHH");
   late MyHomePageState homePageState;
   // final AmplifyDataStore _amplifyDataStore = AmplifyDataStore(
   //   modelProvider: ModelProvider.instance,
@@ -41,6 +45,9 @@ class AmplifyState {
           debugPrint("in verifyLogin: Amplify is configured");
           final awsUser = await Amplify.Auth.getCurrentUser();
           loggedIn = true;
+          getDownloadUrl().then((result) {
+            profilePicture = NetworkImage(result);
+          });
           homePageState.setUserState();
           return;
         }
@@ -86,6 +93,10 @@ class AmplifyState {
         password: password,
       );
       loggedIn = true;
+
+      getDownloadUrl().then((result) {
+        profilePicture = NetworkImage(result);
+      });
       homePageState.setUserState();
       return "SuccessfulLogin";
     } on AuthException catch (e) {
@@ -295,6 +306,56 @@ class AmplifyState {
       await Amplify.DataStore.clear();
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<void> uploadImage() async {
+    // Select image from user's gallery
+    final XFile? pickedFile =
+    await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile == null) {
+      print('No image selected');
+      return;
+    }
+    final uploadOptions = S3UploadFileOptions(
+      accessLevel: StorageAccessLevel.protected,
+    );
+    // Upload image with the current time as the key
+    final key = "profilePicture";
+    final file = File(pickedFile.path);
+    try {
+      final UploadFileResult result =
+      await Amplify.Storage.uploadFile(
+          options: uploadOptions,
+          local: file,
+          key: key,
+          onProgress: (progress) {
+            print("Fraction completed: " + progress.getFractionCompleted().toString());
+          }
+      );
+      print('Successfully uploaded image: ${result.key}');
+    } on StorageException catch (e) {
+      print('Error uploading image: $e');
+    }
+  }
+
+  Future<String> getDownloadUrl() async {
+    try {
+      final uploadOptions = S3GetUrlOptions(
+        accessLevel: StorageAccessLevel.protected,
+      );
+      final GetUrlResult result =
+      await Amplify.Storage.getUrl(key: 'profilePicture',
+      options: uploadOptions);
+      profilePicture = NetworkImage(result.url);
+      return result.url;
+      // NOTE: This code is only for demonstration
+      // Your debug console may truncate the printed url string
+      print('Got URL: ${result.url}');
+    } on StorageException catch (e) {
+      print('Error getting download URL: $e');
+      return '';
     }
   }
 }

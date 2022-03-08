@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
-import 'profile_page.dart';
+import 'my_profile_page.dart';
 import 'match_page.dart';
 import 'messaging_page.dart';
 import 'location_page.dart';
@@ -194,7 +194,7 @@ class MyHomePageState extends State<DashboardScreen> {
                   _buildLocations(),
                   const MatchPage(),
                   const MessagingPage(),
-                  const ProfilePage()
+                  ProfilePage(amplifyState: amplifyState,)
                 ]))));
   }
 }
