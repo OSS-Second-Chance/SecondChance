@@ -1,134 +1,105 @@
 import 'package:flutter/material.dart';
+import 'package:second_chance/models/Location.dart';
+import 'models/UserModel.dart';
+import 'models/Match.dart';
+import 'dart:async';
+import 'match_page.dart';
+import 'view_profile_page.dart';
+import 'messaging_page.dart';
+import 'profile_page.dart';
+import 'amplify.dart';
 
-class MatchPage extends StatefulWidget {
-  const MatchPage({Key? key}) : super(key: key);
+class MatchPage extends StatelessWidget {
+  const MatchPage({Key? key, required this.amplifyState}) : super(key: key);
 
-  @override
-  _MatchPage createState() => _MatchPage();
-}
-
-class _MatchPage extends State<MatchPage> {
-  @override
-  Widget build(BuildContext context) {
-    // Define user here
-    //Future<UserModel> currentUser = getUserProfile();
-
-    // ** Fix build functions to accept user data **
-
-    return ListView(physics: const BouncingScrollPhysics(), children: [
-      const SizedBox(height: 24),
-      ProfileWidget(
-        onClicked: () async {},
-      ),
-      const SizedBox(height: 24),
-      buildName("Match", "test_email"),
-      const SizedBox(height: 36),
-      buildAbout("test_bio"),
-    ]);
-  }
-
-  Widget buildName(String name, String email) => Column(
-        children: [
-          Text(
-            name,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            email,
-            style: const TextStyle(color: Colors.grey),
-          )
-        ],
-      );
-
-  Widget buildAbout(String about) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 48),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'About',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              about,
-              style: const TextStyle(fontSize: 16, height: 1.4),
-            ),
-          ],
-        ),
-      );
-}
-
-class ProfileWidget extends StatelessWidget {
-  final bool isEdit;
-  final VoidCallback onClicked;
-
-  const ProfileWidget({
-    Key? key,
-    this.isEdit = false,
-    required this.onClicked,
-  }) : super(key: key);
+  final AmplifyState amplifyState;
+  // final curUser = amplifyState.getUserProfile();
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-
-    return Center(
-      child: Stack(
-        children: [
-          buildImage(),
-          Positioned(
-            bottom: 0,
-            right: 4,
-            child: buildEditIcon(color),
-          ),
-        ],
-      ),
-    );
+    return MaterialApp(
+        home: DefaultTabController(
+            length: 4,
+            child: Scaffold(
+                appBar: AppBar(
+                  title: Text("Your Matches"),
+                  bottom: const TabBar(
+                    tabs: [
+                      Tab(
+                        // text: "Locations",
+                        icon: Icon(Icons.location_on_sharp),
+                      ),
+                      Tab(
+                        // text: "Matches",
+                        icon: Icon(Icons.social_distance_outlined),
+                      ),
+                      Tab(
+                        // text: "Messages",
+                        icon: Icon(Icons.messenger_rounded),
+                      ),
+                      Tab(
+                        // text: "Profile",
+                        icon: Icon(Icons.settings_accessibility),
+                      ),
+                    ],
+                  ),
+                ),
+                // bottomNavigationBar: menu(),
+                body: TabBarView(children: [
+                  _buildMatches(),
+                  _buildMatches(),
+                  const MessagingPage(),
+                  const ProfilePage()
+                ]))));
   }
 
-  Widget buildImage() {
-    const image = NetworkImage('https://picsum.photos/250?image=9');
+  Widget _buildMatches() {
+    Future<List<Match>> allUsers = amplifyState.getMyMatches();
+    return FutureBuilder<List<Match>>(
+        future: allUsers,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasData) {
+            print(snapshot.data.toString());
+            return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: (snapshot.data!.length * 2),
+                itemBuilder: (context, i) {
+                  if (i.isOdd) {
+                    return const Divider();
+                  }
 
-    return ClipOval(
-      child: Material(
-        color: Colors.transparent,
-        child: Ink.image(
-          image: image,
-          fit: BoxFit.cover,
-          width: 128,
-          height: 128,
-          child: InkWell(onTap: onClicked),
-        ),
-      ),
-    );
+                  final index = i ~/ 2;
+                  return _buildRow(context, snapshot.data![index]);
+                });
+          } else {
+            return Container(
+              child: Text('Loading'),
+            );
+          }
+        });
   }
 
-  Widget buildEditIcon(Color color) => buildCircle(
-        color: Colors.white,
-        all: 3,
-        child: buildCircle(
-          color: color,
-          all: 8,
-          child: Icon(
-            isEdit ? Icons.add_a_photo : Icons.edit,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
-      );
-
-  Widget buildCircle({
-    required Widget child,
-    required double all,
-    required Color color,
-  }) =>
-      ClipOval(
-        child: Container(
-          padding: EdgeInsets.all(all),
-          color: color,
-          child: child,
-        ),
-      );
+  Widget _buildRow(BuildContext context, Match thisMatch) {
+    return Card(
+        child: ListTile(
+            leading: Icon(Icons.person, color: Colors.black, size: 50),
+            title: Text(
+              thisMatch.User2Name.toString(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            subtitle: Text(thisMatch.User1Name.toString()),
+            trailing:
+                Icon(Icons.person_add_alt_1, color: Colors.black, size: 40),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => MessagingPage(
+                          // viewUser: thisMatch,
+                          // amplifyState: amplifyState,
+                          )));
+            }));
+  }
 }

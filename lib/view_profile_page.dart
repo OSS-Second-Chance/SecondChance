@@ -56,7 +56,7 @@ class _ViewProfilePage extends State<ViewProfilePage> {
                 // bottomNavigationBar: menu(),
                 body: TabBarView(children: [
                   buildProfile(),
-                  const MatchPage(),
+                  MatchPage(amplifyState: amplifyState),
                   const MessagingPage(),
                   const ProfilePage()
                 ]))));

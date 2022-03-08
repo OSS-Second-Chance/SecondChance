@@ -288,6 +288,26 @@ class AmplifyState {
     }
   }
 
+  Future<List<Match>> getMyMatches() async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final myMatches = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER1ID.eq(activeID));
+
+      if (myMatches.isEmpty) {
+        debugPrint("You get no bitches: ${activeID}");
+        // return null;
+      }
+
+      return myMatches;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   void createMatch(UserModel viewUser) async {
     getUserProfile().then((curUser) {
       debugPrint('HERE XXXXX');

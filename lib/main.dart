@@ -83,8 +83,6 @@ class MyHomePageState extends State<DashboardScreen> {
     });
   }
 
-
-
   Widget _buildLocations() {
     Future<List<Location>> locations = amplifyState.getAllLocations();
     return FutureBuilder<List<Location>>(
@@ -128,8 +126,10 @@ class MyHomePageState extends State<DashboardScreen> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>
-                          LocationPage(location: curLocation, amplifyState: amplifyState,)));
+                      builder: (context) => LocationPage(
+                            location: curLocation,
+                            amplifyState: amplifyState,
+                          )));
             }));
   }
 
@@ -192,7 +192,9 @@ class MyHomePageState extends State<DashboardScreen> {
                 // bottomNavigationBar: menu(),
                 body: TabBarView(children: [
                   _buildLocations(),
-                  const MatchPage(),
+                  MatchPage(
+                    amplifyState: amplifyState,
+                  ),
                   const MessagingPage(),
                   const ProfilePage()
                 ]))));
