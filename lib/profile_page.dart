@@ -1,7 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'main.dart';
-import 'models/UserModel.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);

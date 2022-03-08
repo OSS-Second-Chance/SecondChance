@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'main.dart';
-import 'models/UserModel.dart';
 
 class MessagingPage extends StatefulWidget {
   const MessagingPage({Key? key}) : super(key: key);

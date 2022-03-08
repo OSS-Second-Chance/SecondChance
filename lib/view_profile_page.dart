@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'main.dart';
 import 'models/UserModel.dart';
 import 'match_page.dart';
-import 'view_profile_page.dart';
 import 'messaging_page.dart';
 import 'profile_page.dart';
 
