@@ -5,13 +5,10 @@ import 'profile_page.dart';
 import 'match_page.dart';
 import 'messaging_page.dart';
 import 'location_page.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
 import 'models/ModelProvider.dart';
 import 'models/Location.dart';
 import 'dart:async';
 
-// import 'package:amplify_api/amplify_api.dart';
-// import _LoginState;
 void main() {
   runApp(const MyApp());
 }
@@ -86,20 +83,10 @@ class MyHomePageState extends State<DashboardScreen> {
     });
   }
 
-  Future<List<Location>> getAllLocations() async {
-    try {
-      List<Location> locations =
-          await Amplify.DataStore.query(Location.classType);
 
-      return (locations);
-    } catch (e) {
-      print(e);
-      throw e;
-    }
-  }
 
   Widget _buildLocations() {
-    Future<List<Location>> locations = getAllLocations();
+    Future<List<Location>> locations = amplifyState.getAllLocations();
     return FutureBuilder<List<Location>>(
         future: locations,
         builder: (context, snapshot) {

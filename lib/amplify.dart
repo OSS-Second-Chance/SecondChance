@@ -211,6 +211,18 @@ class AmplifyState {
     }
   }
 
+  Future<List<Location>> getAllLocations() async {
+    try {
+      List<Location> locations =
+      await Amplify.DataStore.query(Location.classType);
+
+      return (locations);
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   Future<UserModel> getUserProfile() async {
     try {
       AuthUser? curUser;
