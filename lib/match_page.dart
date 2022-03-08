@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'main.dart';
-import 'models/UserModel.dart';
 
 class MatchPage extends StatefulWidget {
   const MatchPage({Key? key}) : super(key: key);

@@ -5,18 +5,9 @@ import 'profile_page.dart';
 import 'match_page.dart';
 import 'messaging_page.dart';
 import 'location_page.dart';
-import 'package:flutter_login/flutter_login.dart';
-import 'package:amplify_core/amplify_core.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
-
-import 'amplifyconfiguration.dart';
 import 'models/ModelProvider.dart';
-import 'models/UserModel.dart';
 import 'models/Location.dart';
-import 'models/Match.dart';
-import 'package:amplify_datastore/amplify_datastore.dart';
-import 'amplifyconfiguration.dart';
 import 'dart:async';
 
 // import 'package:amplify_api/amplify_api.dart';
@@ -151,7 +142,7 @@ class MyHomePageState extends State<DashboardScreen> {
                   context,
                   MaterialPageRoute(
                       builder: (context) =>
-                          LocationPage(location: curLocation)));
+                          LocationPage(location: curLocation, amplifyState: amplifyState,)));
             }));
   }
 

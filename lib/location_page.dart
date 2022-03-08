@@ -1,31 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:second_chance/models/Location.dart';
-import 'main.dart';
 import 'models/UserModel.dart';
-import 'amplify.dart';
 import 'dart:async';
-import 'package:amplify_flutter/amplify_flutter.dart';
 import 'match_page.dart';
 import 'view_profile_page.dart';
 import 'messaging_page.dart';
 import 'profile_page.dart';
+import 'amplify.dart';
 
 class LocationPage extends StatelessWidget {
-  const LocationPage({Key? key, required this.location}) : super(key: key);
+  const LocationPage({Key? key, required this.location, required this.amplifyState}) : super(key: key);
 
   final Location location;
-
-  Future<List<UserModel>> getAllUsers() async {
-    try {
-      List<UserModel> allUsers =
-          await Amplify.DataStore.query(UserModel.classType);
-
-      return (allUsers);
-    } catch (e) {
-      print(e);
-      throw e;
-    }
-  }
+  final AmplifyState amplifyState;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +53,7 @@ class LocationPage extends StatelessWidget {
   }
 
   Widget _buildLocation() {
-    Future<List<UserModel>> allUsers = getAllUsers();
+    Future<List<UserModel>> allUsers = amplifyState.getAllUsers();
     return FutureBuilder<List<UserModel>>(
         future: allUsers,
         builder: (context, snapshot) {

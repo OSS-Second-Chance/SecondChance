@@ -2,7 +2,6 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 
 import 'package:flutter/material.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
-import 'package:flutter_login/flutter_login.dart';
 import 'package:second_chance/main.dart';
 import 'amplifyconfiguration.dart';
 import 'login_screen.dart';
@@ -128,5 +127,17 @@ class AmplifyState {
 
   bool getLoggedIn() {
     return loggedIn;
+  }
+
+  Future<List<UserModel>> getAllUsers() async {
+    try {
+      List<UserModel> allUsers =
+      await Amplify.DataStore.query(UserModel.classType);
+
+      return (allUsers);
+    } catch (e) {
+      print(e);
+      throw e;
+    }
   }
 }
