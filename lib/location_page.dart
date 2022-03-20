@@ -2,55 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:second_chance/models/Location.dart';
 import 'models/UserModel.dart';
 import 'dart:async';
-import 'match_page.dart';
 import 'view_profile_page.dart';
-import 'messaging_page.dart';
-import 'profile_page.dart';
 import 'amplify.dart';
 
-class LocationPage extends StatelessWidget {
-  const LocationPage({Key? key, required this.location, required this.amplifyState}) : super(key: key);
+class LocationPage extends StatefulWidget {
+  LocationPage({Key? key, required this.location, required this.amplifyState})
+      : super(key: key);
 
   final Location location;
   final AmplifyState amplifyState;
 
   @override
+  State<StatefulWidget> createState() {
+    return _LocationState(this.location, this.amplifyState);
+  }
+}
+
+class _LocationState extends State<LocationPage> {
+
+  final Location location;
+  final AmplifyState amplifyState;
+  _LocationState(this.location, this.amplifyState);
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: DefaultTabController(
-            length: 4,
-            child: Scaffold(
+    return
+            Scaffold(
                 appBar: AppBar(
-                  title: Text(location.BarName.toString()),
-                  bottom: const TabBar(
-                    tabs: [
-                      Tab(
-                        // text: "Locations",
-                        icon: Icon(Icons.location_on_sharp),
-                      ),
-                      Tab(
-                        // text: "Matches",
-                        icon: Icon(Icons.social_distance_outlined),
-                      ),
-                      Tab(
-                        // text: "Messages",
-                        icon: Icon(Icons.messenger_rounded),
-                      ),
-                      Tab(
-                        // text: "Profile",
-                        icon: Icon(Icons.settings_accessibility),
-                      ),
-                    ],
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
+                  title: Text(location.BarName.toString()),
                 ),
                 // bottomNavigationBar: menu(),
-                body: TabBarView(children: [
-                  _buildLocation(),
-                  const MatchPage(),
-                  const MessagingPage(),
-                  const ProfilePage()
-                ]))));
+                body: _buildLocation(),
+                );
   }
+
 
   Widget _buildLocation() {
     Future<List<UserModel>> allUsers = amplifyState.getAllUsers();
@@ -80,10 +69,34 @@ class LocationPage extends StatelessWidget {
         });
   }
 
+  Widget buildImage(UserModel user) {
+    Future<String> userProfilePicUrl;
+    userProfilePicUrl = amplifyState.getUserProfilePicture(user);
+    return FutureBuilder(
+      future: userProfilePicUrl,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return ClipOval(
+            child: Material(
+              color: Colors.transparent,
+              child: Ink.image(
+                image: NetworkImage(snapshot.data!.toString()),
+                fit: BoxFit.cover,
+                width:  50,
+                height: 50,
+                child: InkWell(),
+              ),
+            ),
+          );
+        }
+        return const Icon(Icons.person, color: Colors.black, size: 50);
+  });
+  }
+
   Widget _buildRow(BuildContext context, UserModel thisUser) {
     return Card(
         child: ListTile(
-            leading: Icon(Icons.person, color: Colors.black, size: 50),
+            leading: buildImage(thisUser),
             title: Text(
               thisUser.Name.toString(),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),

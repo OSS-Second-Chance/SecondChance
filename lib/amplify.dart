@@ -2,6 +2,7 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:second_chance/main.dart';
+import 'package:second_chance/my_profile_page.dart';
 import 'amplifyconfiguration.dart';
 import 'login_screen.dart';
 import 'models/ModelProvider.dart';
@@ -10,12 +11,15 @@ import 'package:amplify_datastore/amplify_datastore.dart';
 import 'package:amplify_api/amplify_api.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 class AmplifyState {
   bool isAmplifyConfigured = false;
   bool loggedIn = false;
   final picker = ImagePicker();
-  var profilePicture = NetworkImage("AHHH");
+  late var profilePicture;
   late String? name;
   late String? email;
   late String? gender;
@@ -154,12 +158,21 @@ class AmplifyState {
     }
   }
 
+  Future<String> _fetchSession() async {
+      AuthSession res = await Amplify.Auth.fetchAuthSession(
+        options: CognitoSessionOptions(getAWSCredentials: true),
+      );
+      String identityId = (res as CognitoAuthSession).identityId!;
+      return identityId;
+  }
+
   void createUser() async {
     // debugPrint("Creating User");
     AuthUser? curUser;
-
+    String? CognitoIdentityId;
     try {
       curUser = await Amplify.Auth.getCurrentUser();
+      CognitoIdentityId = await _fetchSession();
       debugPrint("ASGDHRJYJHGREFWGRH");
       debugPrint(curUser.username);
       debugPrint("ASGDHRJYJHGREFWGRH");
@@ -170,6 +183,7 @@ class AmplifyState {
     final currentUser = UserModel(
         id: curUser?.userId,
         AuthUsername: curUser?.userId,
+        CognitoIdentityId: CognitoIdentityId,
         Name: name,
         Gender: gender,
         Email: email,
@@ -333,7 +347,39 @@ class AmplifyState {
     }
   }
 
-  Future<void> uploadImage() async {
+  Future<void> setDefaultUserImage() async {
+    Uri imageUri = Uri.https("pbs.twimg.com",
+        "/profile_images/525335533350699009/Z0Qg4rFi_400x400.jpeg");
+
+    var imageGet = await http.get(imageUri);
+    Directory imageDir = await getApplicationDocumentsDirectory();
+    File image = new File(join(imageDir.path, "defaultProfile.png"));
+    image.writeAsBytes(imageGet.bodyBytes).then((result) async {
+
+      final uploadOptions = S3UploadFileOptions(
+        accessLevel: StorageAccessLevel.protected,
+      );
+      // Upload image with the current time as the key
+      final key = "profilePicture";
+      final file = File(image.path);
+      try {
+        final UploadFileResult result =
+            await Amplify.Storage.uploadFile(
+            options: uploadOptions,
+            local: file,
+            key: key,
+            onProgress: (progress) {
+              print("Fraction completed: " + progress.getFractionCompleted().toString());
+            }
+        );
+        print('Successfully uploaded image: ${result.key}');
+      } on StorageException catch (e) {
+        print('Error uploading image: $e');
+      }
+    });
+  }
+
+  Future<void> uploadImage(ProfilePageState state) async {
     // Select image from user's gallery
     final XFile? pickedFile =
     await picker.pickImage(source: ImageSource.gallery);
@@ -359,10 +405,28 @@ class AmplifyState {
           }
       );
       print('Successfully uploaded image: ${result.key}');
+      getDownloadUrl().then( (_) {
+        state.newProfileImage();
+      });
     } on StorageException catch (e) {
       print('Error uploading image: $e');
     }
   }
+
+  Future<String> getUserProfilePicture(UserModel user) async {
+      final uploadOptions = S3GetUrlOptions(
+          accessLevel: StorageAccessLevel.protected,
+          targetIdentityId: user.CognitoIdentityId
+      );
+
+
+      return Amplify.Storage.getUrl(key: 'profilePicture',
+          options: uploadOptions).then((result) {
+        return result.url;
+      });
+
+  }
+
 
   Future<String> getDownloadUrl() async {
     try {

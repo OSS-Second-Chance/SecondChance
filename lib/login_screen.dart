@@ -77,6 +77,7 @@ class _LoginState extends State<LoginScreen> {
             .then((loginResult) {
           if (loginResult == "SuccessfulLogin") {
             amplifyState.createUser();
+            amplifyState.setDefaultUserImage();
             debugPrint(data.toString());
 
             return null;

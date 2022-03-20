@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-
 import 'amplify.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key, required this.amplifyState}) : super(key: key);
   final AmplifyState amplifyState;
   @override
-  _ProfilePage createState() => _ProfilePage();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePage extends State<ProfilePage> {
+class ProfilePageState extends State<ProfilePage> {
   final VoidCallback onClicked = () async {};
   final isEdit = false;
   late var image;
@@ -27,16 +26,11 @@ class _ProfilePage extends State<ProfilePage> {
   }
 
   newProfileImage() {
-    setState(() {
-      try {
-        amplifyState.getDownloadUrl().then((result) {
-          image = NetworkImage(result);
-        });
-      } catch (_){
-        image = NetworkImage('https://picsum.photos/250?image=9');
-      }
-    });
+          setState(() {
+            image = amplifyState.profilePicture;
+          });
   }
+
   @override
   Widget build(BuildContext context) {
     // Define user here
@@ -124,20 +118,21 @@ class _ProfilePage extends State<ProfilePage> {
     color: Colors.white,
     all: 3,
     child: buildCircle(
-        color: color,
-        all: 4,
-        child: IconButton(
-            icon: Icon(
-              isEdit ? Icons.add_a_photo : Icons.edit,
-              color: Colors.white,
-              size: 20,
-            ),
-            onPressed: () {
-              amplifyState.uploadImage();
-              newProfileImage();
-            })
-    ),
-  );
+            all: 8,
+            color: color,
+            child: InkWell(
+                  child: Icon(
+                  isEdit ? Icons.add_a_photo : Icons.edit,
+                  color: Colors.white,
+                  size: 20
+                ),
+                onTap: () {
+                  amplifyState.uploadImage(this);
+                  newProfileImage();
+                })
+
+        ),
+    );
 
   Widget buildCircle({
     required Widget child,
