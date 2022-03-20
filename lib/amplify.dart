@@ -293,11 +293,15 @@ class AmplifyState {
       AuthUser? curUser;
       curUser = await Amplify.Auth.getCurrentUser();
       final activeID = curUser.userId;
+      final isUser = Match.USER1ID.eq(activeID).or(Match.USER2ID.eq(activeID));
       final myMatches = await Amplify.DataStore.query(Match.classType,
-          where: Match.USER1ID.eq(activeID));
+          where: Match.USER1CHECK
+              .eq(true)
+              .and(Match.USER2CHECK.eq(true))
+              .and(isUser));
 
       if (myMatches.isEmpty) {
-        debugPrint("You get no bitches: ${activeID}");
+        debugPrint("You got no matches: ${activeID}");
         // return null;
       }
 
@@ -308,29 +312,236 @@ class AmplifyState {
     }
   }
 
+  Future<List<Match>> getMyAdmirers() async {
+    try {
+      AuthUser? curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+      final user2Null =
+          Match.USER2ID.eq(activeID).and(Match.USER2CHECK.eq(null));
+
+      final myAdmirers = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER1CHECK.eq(true).and(user2Null));
+
+      if (myAdmirers.isEmpty) {
+        debugPrint("You got no matches: ${activeID}");
+        // return null;
+      }
+
+      return myAdmirers;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
+  Future<List<Match>> getMyRequests() async {
+    try {
+      AuthUser? curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+      final user1True =
+          Match.USER1ID.eq(activeID).and(Match.USER1CHECK.eq(true));
+
+      final myRequests = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER2CHECK.eq(null).and(user1True));
+
+      if (myRequests.isEmpty) {
+        debugPrint("You got no matches: ${activeID}");
+        // return null;
+      }
+
+      return myRequests;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
+  void approveRequest(Match curMatch) async {
+    try {
+      Match updatedMatch = curMatch;
+
+      updatedMatch = curMatch.copyWith(User2Check: true);
+      await Amplify.DataStore.save(updatedMatch);
+      print('Approved Match');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void declineRequest(Match curMatch) async {
+    try {
+      Match updatedMatch = curMatch;
+
+      updatedMatch = curMatch.copyWith(User2Check: false);
+      await Amplify.DataStore.save(updatedMatch);
+      print('Declined Match');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void removeRequest(Match curMatch) async {
+    try {
+      Match updatedMatch = curMatch;
+
+      updatedMatch = curMatch.copyWith(User1Check: false);
+      await Amplify.DataStore.save(updatedMatch);
+      print('Declined Match');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void unMatch(Match curMatch) async {
+    try {
+      final matchToBeDeleted = curMatch;
+
+      await Amplify.DataStore.delete(matchToBeDeleted);
+
+      print('Deleted match with Name: ${matchToBeDeleted.User1Name}');
+      print('Deleted match with Name: ${matchToBeDeleted.User2Name}');
+    } catch (e) {
+      print(e);
+    }
+  }
+
   void createMatch(UserModel viewUser) async {
     getUserProfile().then((curUser) {
       debugPrint('HERE XXXXX');
       debugPrint(curUser.Name.toString());
       debugPrint(viewUser.Name.toString());
 
-      final newMatch = Match(
-        User1Name: curUser.Name,
-        User1ID: curUser.AuthUsername,
-        User1Check: true,
-        User2Name: viewUser.Name,
-        User2ID: viewUser.AuthUsername,
-        User2Check: true,
-      );
-
-      try {
-        Amplify.DataStore.save(newMatch);
-        print(
-            'New Match between ${newMatch.User1Name} and ${newMatch.User2Name}');
-      } catch (e) {
-        print(e);
+      if (viewUser.AuthUsername == curUser.id) {
+        return;
       }
+      matchExist(viewUser).then((matchExists) {
+        if (matchExists) {
+          debugPrint("MATCH ALREADY EXISTS");
+          return;
+        }
+
+        final newMatch = Match(
+          User1Name: curUser.Name,
+          User1ID: curUser.AuthUsername,
+          User1Check: true,
+          User2Name: viewUser.Name,
+          User2ID: viewUser.AuthUsername,
+          // User2Check: true,
+        );
+
+        try {
+          Amplify.DataStore.save(newMatch);
+          print(
+              'New Match between ${newMatch.User1Name} and ${newMatch.User2Name}');
+        } catch (e) {
+          print(e);
+        }
+      });
     });
+  }
+
+  Future<bool> matchExist(UserModel viewUser) async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final isUserA = Match.USER1ID
+          .eq(activeID)
+          .and(Match.USER2ID.eq(viewUser.AuthUsername));
+      final isUserB = Match.USER1ID
+          .eq(viewUser.AuthUsername)
+          .and(Match.USER2ID.eq(activeID));
+
+      final myMatches = await Amplify.DataStore.query(Match.classType,
+          where: isUserA.or(isUserB));
+
+      if (myMatches.isEmpty) {
+        debugPrint("Match Button");
+        return false;
+      }
+      return true;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
+  Future<Match> getMatch(UserModel viewUser) async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final isUserA = Match.USER1ID
+          .eq(activeID)
+          .and(Match.USER2ID.eq(viewUser.AuthUsername));
+      final isUserB = Match.USER1ID
+          .eq(viewUser.AuthUsername)
+          .and(Match.USER2ID.eq(activeID));
+
+      final myMatches = await Amplify.DataStore.query(Match.classType,
+          where: isUserA.or(isUserB));
+
+      if (myMatches.isEmpty) {
+        debugPrint("No Match");
+      }
+      return myMatches.first;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
+  Future<String> getMatchStatus(UserModel viewUser) async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final isUserA = Match.USER1ID
+          .eq(activeID)
+          .and(Match.USER2ID.eq(viewUser.AuthUsername));
+      final isUserB = Match.USER1ID
+          .eq(viewUser.AuthUsername)
+          .and(Match.USER2ID.eq(activeID));
+      final myMatches = await Amplify.DataStore.query(Match.classType,
+          where: isUserA.or(isUserB));
+
+      if (myMatches.isEmpty) {
+        debugPrint("No Matches (Could be your own profile)");
+        return ("NoMatch");
+      }
+      Match curMatch = myMatches.first;
+      if (curMatch.User1Check == true && curMatch.User2Check == true) {
+        return ("Match");
+      } else if (curMatch.User1ID == activeID &&
+          curMatch.User1Check == true &&
+          (curMatch.User2Check == false || curMatch.User2Check == null)) {
+        return ("Outgoing");
+      } else if (curMatch.User2ID == activeID &&
+          curMatch.User2Check == true &&
+          (curMatch.User1Check == false || curMatch.User1Check == null)) {
+        return ("Outgoing");
+      } else if (curMatch.User1ID == activeID &&
+          curMatch.User2Check == true &&
+          (curMatch.User1Check == false || curMatch.User1Check == null)) {
+        return ("Incoming");
+      } else if (curMatch.User2ID == activeID &&
+          curMatch.User1Check == true &&
+          (curMatch.User2Check == false || curMatch.User2Check == null)) {
+        return ("Incoming");
+      } else if ((curMatch.User1Check == false ||
+                  curMatch.User1Check == null) ==
+              true &&
+          (curMatch.User2Check == false || curMatch.User2Check == null)) {
+        return ("NoLongerMatched");
+      }
+
+      return ("Temp Case");
+    } catch (e) {
+      print(e);
+      throw e;
+    }
   }
 
   void clearLocalDataStore() async {

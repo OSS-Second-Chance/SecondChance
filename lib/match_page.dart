@@ -17,53 +17,97 @@ class MatchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-        home: DefaultTabController(
-            length: 4,
-            child: Scaffold(
-                appBar: AppBar(
-                  title: Text("Your Matches"),
-                  bottom: const TabBar(
-                    tabs: [
-                      Tab(
-                        // text: "Locations",
-                        icon: Icon(Icons.location_on_sharp),
-                      ),
-                      Tab(
-                        // text: "Matches",
-                        icon: Icon(Icons.social_distance_outlined),
-                      ),
-                      Tab(
-                        // text: "Messages",
-                        icon: Icon(Icons.messenger_rounded),
-                      ),
-                      Tab(
-                        // text: "Profile",
-                        icon: Icon(Icons.settings_accessibility),
-                      ),
-                    ],
-                  ),
-                ),
-                // bottomNavigationBar: menu(),
-                body: TabBarView(children: [
-                  _buildMatches(),
-                  _buildMatches(),
-                  const MessagingPage(),
-                  const ProfilePage()
-                ]))));
+    return ListView(physics: const BouncingScrollPhysics(), children: [
+      const Text(
+        "Matches",
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+      ),
+      // const SizedBox(height: 4),
+      _buildMatches(amplifyState.getMyMatches()),
+      // const SizedBox(height: 24),
+      const Text(
+        "Admirers",
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+      ),
+      // const SizedBox(height: 4),
+      _buildAdmirers(),
+      // const SizedBox(height: 24),
+      const Text(
+        "Requests",
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+      ),
+      // const SizedBox(height: 4),
+      _buildRequests(),
+      // const SizedBox(height: 24),
+    ]);
   }
 
-  Widget _buildMatches() {
-    Future<List<Match>> allUsers = amplifyState.getMyMatches();
+  Widget _buildMatches(Future<List<Match>> matchType) {
     return FutureBuilder<List<Match>>(
-        future: allUsers,
+        future: matchType,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return CircularProgressIndicator();
           } else if (snapshot.hasData) {
             print(snapshot.data.toString());
             return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(8),
+                itemCount: (snapshot.data!.length * 2),
+                itemBuilder: (context, i) {
+                  if (i.isOdd) {
+                    return const Divider();
+                  }
+
+                  final index = i ~/ 2;
+                  return _buildRow(context, snapshot.data![index]);
+                });
+          } else {
+            return Container(
+              child: Text('Loading'),
+            );
+          }
+        });
+  }
+
+  Widget _buildAdmirers() {
+    Future<List<Match>> allAdmirers = amplifyState.getMyAdmirers();
+    return FutureBuilder<List<Match>>(
+        future: allAdmirers,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasData) {
+            print(snapshot.data.toString());
+            return ListView.builder(
+                padding: const EdgeInsets.all(8),
+                itemCount: (snapshot.data!.length * 2),
+                itemBuilder: (context, i) {
+                  if (i.isOdd) {
+                    return const Divider();
+                  }
+
+                  final index = i ~/ 2;
+                  return _buildRow(context, snapshot.data![index]);
+                });
+          } else {
+            return Container(
+              child: Text('Loading'),
+            );
+          }
+        });
+  }
+
+  Widget _buildRequests() {
+    Future<List<Match>> allRequests = amplifyState.getMyRequests();
+    return FutureBuilder<List<Match>>(
+        future: allRequests,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasData) {
+            print(snapshot.data.toString());
+            return ListView.builder(
+                padding: const EdgeInsets.all(8),
                 itemCount: (snapshot.data!.length * 2),
                 itemBuilder: (context, i) {
                   if (i.isOdd) {
@@ -96,7 +140,7 @@ class MatchPage extends StatelessWidget {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => MessagingPage(
+                      builder: (context) => const MessagingPage(
                           // viewUser: thisMatch,
                           // amplifyState: amplifyState,
                           )));

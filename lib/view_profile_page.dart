@@ -22,10 +22,9 @@ class _ViewProfilePage extends State<ViewProfilePage> {
   _ViewProfilePage(this.viewUser, this.amplifyState);
   final UserModel viewUser;
   final AmplifyState amplifyState;
-
+  List<String> list = ["A", "B", "C", "D"];
   @override
   Widget build(BuildContext context) {
-    amplifyState.createMatch(viewUser);
     return MaterialApp(
         home: DefaultTabController(
             length: 4,
@@ -72,6 +71,7 @@ class _ViewProfilePage extends State<ViewProfilePage> {
       buildName(viewUser.Name.toString()),
       const SizedBox(height: 36),
       buildAbout(viewUser),
+      buildMatchButton(viewUser),
     ]);
   }
 
@@ -118,6 +118,100 @@ class _ViewProfilePage extends State<ViewProfilePage> {
           ],
         ),
       );
+
+  Widget buildMatchContainer(UserModel viewUser, displayText, action) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 48),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: Colors.red, // background
+                onPrimary: Colors.white, // foreground
+              ),
+              onPressed: () {
+                action;
+              },
+              child: Text(displayText),
+            ),
+            // ElevatedButton(
+            //   style: ElevatedButton.styleFrom(
+            //     primary: Colors.red, // background
+            //     onPrimary: Colors.white, // foreground
+            //   ),
+            //   onPressed: () {
+            //     amplifyState
+            //         .getMatch(viewUser)
+            //         .then((curMatch) => amplifyState.unMatch(curMatch));
+            //   },
+            //   child: Text('Unmatch'),
+            // ),
+          ],
+        ),
+      );
+
+  Widget buildMatchButton(UserModel viewUser) {
+    try {
+      String displayText = 'Placeholder Text';
+      void action;
+      String status = 'ShouldBeChanged';
+
+      amplifyState.getMatchStatus(viewUser).then((tempStatus) {
+        final status = tempStatus;
+        debugPrint(tempStatus);
+        debugPrint(status);
+
+        debugPrint("XXXXXXXYYYYY");
+        debugPrint(status);
+        debugPrint("Above");
+        if (status == 'NoMatch') {
+          displayText = 'Request Match';
+          action = amplifyState.createMatch(viewUser);
+        } else if (status == 'Match') {
+          displayText = 'Unmatch';
+          amplifyState
+              .getMatch(viewUser)
+              .then((curMatch) => action = amplifyState.unMatch(curMatch));
+        } else if (status == 'Outgoing') {
+          displayText = 'Remove Request';
+          amplifyState
+              .getMatch(viewUser)
+              .then((curMatch) => action = amplifyState.unMatch(curMatch));
+        } else if (status == 'Incoming') {
+          displayText = 'Accept Request';
+          amplifyState.getMatch(viewUser).then(
+              (curMatch) => action = amplifyState.approveRequest(curMatch));
+        }
+
+        debugPrint("Here");
+        debugPrint(status);
+        debugPrint('Did we get status?');
+        debugPrint(displayText);
+      });
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <ElevatedButton>[
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              primary: Colors.red, // background
+              onPrimary: Colors.white, // foreground
+            ),
+            onPressed: () {
+              action;
+            },
+            child: Text(displayText),
+          ),
+        ],
+      );
+      // Future.delayed(const Duration(milliseconds: 5000), () {return Column();});
+
+    } catch (Exc) {
+      print(Exc);
+
+      rethrow;
+    }
+  }
 }
 
 class ProfileWidget extends StatelessWidget {
