@@ -45,8 +45,7 @@ class _LoginState extends State<LoginScreen> {
       data.name.toString(),
       data.password.toString(),
       data.additionalSignupData!["Name"].toString(),
-    )
-        .then((result) {
+    ).then((result) {
       debugPrint("In signup Future return");
       debugPrint("result: " + result);
       if (result == "SuccessfulSignup") {
@@ -77,8 +76,8 @@ class _LoginState extends State<LoginScreen> {
             .loginUser(data.name.toString(), data.password.toString())
             .then((loginResult) {
           if (loginResult == "SuccessfulLogin") {
-            // debugPrint("HERE XXXXXX");
             amplifyState.createUser();
+            amplifyState.setDefaultUserImage();
             debugPrint(data.toString());
 
             return null;
