@@ -120,6 +120,7 @@ class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderSt
                             LocationPage(location: curLocation, amplifyState: amplifyState,)));
               }));
     }
+
   Widget _buildLocations() {
     Future<List<Location>> locations = amplifyState.getAllLocations();
     return FutureBuilder<List<Location>>(
@@ -147,6 +148,28 @@ class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderSt
           }
         });
   }
+
+  // Widget _buildRow(Location curLocation) {
+  //   return Card(
+  //       child: ListTile(
+  //           leading: Icon(Icons.wine_bar, color: Colors.black, size: 50),
+  //           title: Text(
+  //             curLocation.BarName.toString(),
+  //             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+  //           ),
+  //           subtitle: Text(curLocation.Region.toString()),
+  //           trailing: Icon(Icons.add_location_alt_sharp,
+  //               color: Colors.orange, size: 40),
+  //           onTap: () {
+  //             Navigator.push(
+  //                 context,
+  //                 MaterialPageRoute(
+  //                     builder: (context) => LocationPage(
+  //                           location: curLocation,
+  //                           amplifyState: amplifyState,
+  //                         )));
+  //           }));
+  // }
 
 
   @override
@@ -191,14 +214,16 @@ class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderSt
                   ],
                 ),
                 // bottomNavigationBar: menu(),
+
                 body: TabBarView(
                   controller: _controller,
                   children: [
                     _buildLocations(),
-                    const MatchPage(),
+                    MatchPage(amplifyState: amplifyState),
                     const MessagingPage(),
                     ProfilePage(amplifyState: amplifyState)
                   ]
                 )));
+
   }
 }

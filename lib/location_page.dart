@@ -6,7 +6,8 @@ import 'view_profile_page.dart';
 import 'amplify.dart';
 
 class LocationPage extends StatefulWidget {
-  LocationPage({Key? key, required this.location, required this.amplifyState})
+  const LocationPage(
+      {Key? key, required this.location, required this.amplifyState})
       : super(key: key);
 
   final Location location;
@@ -36,8 +37,8 @@ class _LocationState extends State<LocationPage> {
                   title: Text(location.BarName.toString()),
                 ),
                 // bottomNavigationBar: menu(),
-                body: _buildLocation(),
-                );
+                body: _buildLocation());
+
   }
 
 
