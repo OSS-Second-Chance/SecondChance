@@ -23,6 +23,46 @@ class _ViewProfilePage extends State<ViewProfilePage> {
   final UserModel viewUser;
   final AmplifyState amplifyState;
   List<String> list = ["A", "B", "C", "D"];
+  String displayText = 'Placeholder Text';
+  void action;
+  String status = 'ShouldBeChanged';
+  // Here
+  @override
+  initState() {
+    super.initState();
+    // amplifyState = widget.amplifyState;
+    amplifyState.getMatchStatus(viewUser).then((tempStatus) {
+      status = tempStatus;
+      debugPrint(status);
+
+      debugPrint("XXXXXXXYYYYY");
+      debugPrint(status);
+      debugPrint("Above");
+      if (status == 'NoMatch') {
+        setState(() {
+          displayText = 'Request Match';
+        });
+      } else if (status == 'Match') {
+        setState(() {
+          displayText = 'Unmatch';
+        });
+      } else if (status == 'Outgoing') {
+        setState(() {
+          displayText = 'Remove Request';
+        });
+      } else if (status == 'Incoming') {
+        setState(() {
+          displayText = 'Accept Request';
+        });
+      }
+
+      debugPrint("Here");
+      debugPrint(status);
+      debugPrint('Did we get status?');
+      debugPrint(displayText);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -152,65 +192,63 @@ class _ViewProfilePage extends State<ViewProfilePage> {
       );
 
   Widget buildMatchButton(UserModel viewUser) {
-    try {
-      String displayText = 'Placeholder Text';
-      void action;
-      String status = 'ShouldBeChanged';
-
-      amplifyState.getMatchStatus(viewUser).then((tempStatus) {
-        final status = tempStatus;
-        debugPrint(tempStatus);
-        debugPrint(status);
-
-        debugPrint("XXXXXXXYYYYY");
-        debugPrint(status);
-        debugPrint("Above");
-        if (status == 'NoMatch') {
-          displayText = 'Request Match';
-          action = amplifyState.createMatch(viewUser);
-        } else if (status == 'Match') {
-          displayText = 'Unmatch';
-          amplifyState
-              .getMatch(viewUser)
-              .then((curMatch) => action = amplifyState.unMatch(curMatch));
-        } else if (status == 'Outgoing') {
-          displayText = 'Remove Request';
-          amplifyState
-              .getMatch(viewUser)
-              .then((curMatch) => action = amplifyState.unMatch(curMatch));
-        } else if (status == 'Incoming') {
-          displayText = 'Accept Request';
-          amplifyState.getMatch(viewUser).then(
-              (curMatch) => action = amplifyState.approveRequest(curMatch));
-        }
-
-        debugPrint("Here");
-        debugPrint(status);
-        debugPrint('Did we get status?');
-        debugPrint(displayText);
-      });
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <ElevatedButton>[
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              primary: Colors.red, // background
-              onPrimary: Colors.white, // foreground
-            ),
-            onPressed: () {
-              action;
-            },
-            child: Text(displayText),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <ElevatedButton>[
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            primary: Colors.red, // background
+            onPrimary: Colors.white, // foreground
           ),
-        ],
-      );
-      // Future.delayed(const Duration(milliseconds: 5000), () {return Column();});
+          onPressed: () {
+            if (status == 'NoMatch') {
+              action = amplifyState.createMatch(viewUser);
+            } else if (status == 'Match') {
+              amplifyState
+                  .getMatch(viewUser)
+                  .then((curMatch) => action = amplifyState.unMatch(curMatch));
+            } else if (status == 'Outgoing') {
+              amplifyState
+                  .getMatch(viewUser)
+                  .then((curMatch) => action = amplifyState.unMatch(curMatch));
+            } else if (status == 'Incoming') {
+              amplifyState.getMatch(viewUser).then(
+                  (curMatch) => action = amplifyState.approveRequest(curMatch));
+            }
+            Future.delayed(const Duration(milliseconds: 500), () {
+              amplifyState.getMatchStatus(viewUser).then((tempStatus) {
+                status = tempStatus;
 
-    } catch (Exc) {
-      print(Exc);
+                if (status == 'NoMatch') {
+                  setState(() {
+                    displayText = 'Request Match';
+                  });
+                } else if (status == 'Match') {
+                  setState(() {
+                    displayText = 'Unmatch';
+                  });
+                } else if (status == 'Outgoing') {
+                  setState(() {
+                    displayText = 'Remove Request';
+                  });
+                } else if (status == 'Incoming') {
+                  setState(() {
+                    displayText = 'Accept Request';
+                  });
+                }
 
-      rethrow;
-    }
+                debugPrint("Here");
+                debugPrint(status);
+                debugPrint('Did we get status?');
+                debugPrint(displayText);
+              });
+            });
+          },
+          child: Text(displayText),
+        ),
+      ],
+    );
+    // Future.delayed(const Duration(milliseconds: 5000), () {return Column();});
   }
 }
 

@@ -400,8 +400,8 @@ class AmplifyState {
 
       await Amplify.DataStore.delete(matchToBeDeleted);
 
-      print('Deleted match with Name: ${matchToBeDeleted.User1Name}');
-      print('Deleted match with Name: ${matchToBeDeleted.User2Name}');
+      // print('Deleted match with Name: ${matchToBeDeleted.User1Name}');
+      // print('Deleted match with Name: ${matchToBeDeleted.User2Name}');
     } catch (e) {
       print(e);
     }
