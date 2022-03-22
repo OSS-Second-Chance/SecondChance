@@ -5,7 +5,7 @@ import 'dart:async';
 import 'view_profile_page.dart';
 import 'amplify.dart';
 
-class LocationPage extends StatelessWidget {
+class LocationPage extends StatefulWidget {
   const LocationPage(
       {Key? key, required this.location, required this.amplifyState})
       : super(key: key);
@@ -37,14 +37,7 @@ class _LocationState extends State<LocationPage> {
                   title: Text(location.BarName.toString()),
                 ),
                 // bottomNavigationBar: menu(),
-                body: TabBarView(children: [
-                  _buildLocation(),
-                  MatchPage(
-                    amplifyState: amplifyState,
-                  ),
-                  const MessagingPage(),
-                  const ProfilePage()
-                ]))));
+                body: _buildLocation());
 
   }
 

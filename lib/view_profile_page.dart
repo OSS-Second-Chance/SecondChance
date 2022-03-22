@@ -20,8 +20,9 @@ class ViewProfilePage extends StatefulWidget {
 
 class _ViewProfilePage extends State<ViewProfilePage> {
 
-  final UserModel viewUser;
-  final AmplifyState amplifyState;
+  late UserModel viewUser;
+  late AmplifyState amplifyState;
+  _ViewProfilePage(this.viewUser, this.amplifyState);
   NetworkImage image = NetworkImage('https://picsum.photos/250?image=9');
   final VoidCallback onClicked = () async {};
   final isEdit = false;
@@ -240,7 +241,7 @@ class _ViewProfilePage extends State<ViewProfilePage> {
     );
     // Future.delayed(const Duration(milliseconds: 5000), () {return Column();});
   }
-}
+
 
 
   Widget ProfileWidget(BuildContext context) {
