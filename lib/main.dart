@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
-import 'profile_page.dart';
+import 'my_profile_page.dart';
 import 'match_page.dart';
 import 'messaging_page.dart';
 import 'location_page.dart';
@@ -58,16 +58,33 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => MyHomePageState();
 }
 
-class MyHomePageState extends State<DashboardScreen> {
+class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderStateMixin{
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
-
+  String AppStage = "Profile";
+  late Widget AppState;
   // var locationList = <Location>[].obs;
+
+  late TabController _controller;
+  int _selectedIndex = 0;
+  List<Widget> list = [
+    const Tab(icon: Icon(Icons.location_on_sharp)),
+    const Tab(icon: Icon(Icons.social_distance_outlined)),
+    const Tab(icon: Icon(Icons.messenger_rounded)),
+    const Tab(icon: Icon(Icons.settings_accessibility))];
 
   @override
   initState() {
     super.initState();
+    _controller = TabController(length: list.length, vsync: this);
+
+    _controller.addListener(() {
+      setState(() {
+        _selectedIndex = _controller.index;
+      });
+      print("Selected Index: " + _controller.index.toString());
+    });;
     amplifyState.configureAmplify(context, amplifyState, this);
   }
 
@@ -82,6 +99,27 @@ class MyHomePageState extends State<DashboardScreen> {
       }
     });
   }
+
+
+    Widget _buildRow(Location curLocation) {
+      return Card(
+          child: ListTile(
+              leading: Icon(Icons.wine_bar, color: Colors.black, size: 50),
+              title: Text(
+                curLocation.BarName.toString(),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+              subtitle: Text(curLocation.Region.toString()),
+              trailing: Icon(Icons.add_location_alt_sharp,
+                  color: Colors.orange, size: 40),
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            LocationPage(location: curLocation, amplifyState: amplifyState,)));
+              }));
+    }
 
   Widget _buildLocations() {
     Future<List<Location>> locations = amplifyState.getAllLocations();
@@ -133,6 +171,7 @@ class MyHomePageState extends State<DashboardScreen> {
             }));
   }
 
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -142,29 +181,14 @@ class MyHomePageState extends State<DashboardScreen> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return MaterialApp(
-        home: DefaultTabController(
-            length: 4,
-            child: Scaffold(
+        home: Scaffold(
                 appBar: AppBar(
-                  bottom: const TabBar(
-                    tabs: [
-                      Tab(
-                        // text: "Locations",
-                        icon: Icon(Icons.location_on_sharp),
-                      ),
-                      Tab(
-                        // text: "Matches",
-                        icon: Icon(Icons.social_distance_outlined),
-                      ),
-                      Tab(
-                        // text: "Messages",
-                        icon: Icon(Icons.messenger_rounded),
-                      ),
-                      Tab(
-                        // text: "Profile",
-                        icon: Icon(Icons.settings_accessibility),
-                      ),
-                    ],
+                  bottom: TabBar(
+                    onTap: (index) {
+
+                    },
+                    controller: _controller,
+                    tabs: list,
                   ),
 
                   // Here we take the value from the MyHomePage object that was created by
@@ -190,32 +214,16 @@ class MyHomePageState extends State<DashboardScreen> {
                   ],
                 ),
                 // bottomNavigationBar: menu(),
-                body: TabBarView(children: [
-                  _buildLocations(),
-                  MatchPage(
-                    amplifyState: amplifyState,
-                  ),
-                  const MessagingPage(),
-                  const ProfilePage()
-                ]))));
+
+                body: TabBarView(
+                  controller: _controller,
+                  children: [
+                    _buildLocations(),
+                    const MatchPage(amplifyState: amplifyState),
+                    const MessagingPage(),
+                    ProfilePage(amplifyState: amplifyState)
+                  ]
+                )));
+
   }
 }
-
-// Location page class, will move to another file once it's less bare-bones
-
-
-
-// class MatchPage extends StatelessWidget {
-//   const MatchPage({Key? key, required this.user}) : super(key: key);
-
-//   final String user;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(user),
-//       ),
-//     );
-//   }
-// }

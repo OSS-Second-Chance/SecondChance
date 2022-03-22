@@ -1,13 +1,36 @@
 import 'package:flutter/material.dart';
+import 'amplify.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
-
+  const ProfilePage({Key? key, required this.amplifyState}) : super(key: key);
+  final AmplifyState amplifyState;
   @override
-  _ProfilePage createState() => _ProfilePage();
+  ProfilePageState createState() => ProfilePageState();
 }
 
-class _ProfilePage extends State<ProfilePage> {
+class ProfilePageState extends State<ProfilePage> {
+  final VoidCallback onClicked = () async {};
+  final isEdit = false;
+  late var image;
+  late AmplifyState amplifyState;
+
+  @override
+  initState() {
+    super.initState();
+    amplifyState = widget.amplifyState;
+    try {
+        image = amplifyState.profilePicture;
+    } catch (_){
+      image = NetworkImage('https://picsum.photos/250?image=9');
+    }
+  }
+
+  newProfileImage() {
+          setState(() {
+            image = amplifyState.profilePicture;
+          });
+  }
+
   @override
   Widget build(BuildContext context) {
     // Define user here
@@ -17,9 +40,7 @@ class _ProfilePage extends State<ProfilePage> {
 
     return ListView(physics: const BouncingScrollPhysics(), children: [
       const SizedBox(height: 24),
-      ProfileWidget(
-        onClicked: () async {},
-      ),
+      ProfileWidget(context),
       const SizedBox(height: 24),
       buildName("test_name", "test_email"),
       const SizedBox(height: 36),
@@ -58,20 +79,9 @@ class _ProfilePage extends State<ProfilePage> {
           ],
         ),
       );
-}
 
-class ProfileWidget extends StatelessWidget {
-  final bool isEdit;
-  final VoidCallback onClicked;
 
-  const ProfileWidget({
-    Key? key,
-    this.isEdit = false,
-    required this.onClicked,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget ProfileWidget(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
 
     return Center(
@@ -89,7 +99,6 @@ class ProfileWidget extends StatelessWidget {
   }
 
   Widget buildImage() {
-    const image = NetworkImage('https://picsum.photos/250?image=9');
 
     return ClipOval(
       child: Material(
@@ -106,18 +115,24 @@ class ProfileWidget extends StatelessWidget {
   }
 
   Widget buildEditIcon(Color color) => buildCircle(
-        color: Colors.white,
-        all: 3,
-        child: buildCircle(
-          color: color,
-          all: 8,
-          child: Icon(
-            isEdit ? Icons.add_a_photo : Icons.edit,
-            color: Colors.white,
-            size: 20,
-          ),
+    color: Colors.white,
+    all: 3,
+    child: buildCircle(
+            all: 8,
+            color: color,
+            child: InkWell(
+                  child: Icon(
+                  isEdit ? Icons.add_a_photo : Icons.edit,
+                  color: Colors.white,
+                  size: 20
+                ),
+                onTap: () {
+                  amplifyState.uploadImage(this);
+                  newProfileImage();
+                })
+
         ),
-      );
+    );
 
   Widget buildCircle({
     required Widget child,
