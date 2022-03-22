@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Android Build
+name: Android Release
 
 # Controls when the workflow will run
 on:
@@ -89,7 +89,9 @@ jobs:
       - name: version
         run: echo "::set-output name=version::$(cat VERSION)"
         id: version
-
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: ${{ steps.version.outputs.version }}
       - name: Release Build
         id: create_release
         uses: softprops/action-gh-release@v1
