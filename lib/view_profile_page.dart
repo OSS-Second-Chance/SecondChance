@@ -19,7 +19,6 @@ class ViewProfilePage extends StatefulWidget {
 }
 
 class _ViewProfilePage extends State<ViewProfilePage> {
-
   late UserModel viewUser;
   late AmplifyState amplifyState;
   _ViewProfilePage(this.viewUser, this.amplifyState);
@@ -34,13 +33,14 @@ class _ViewProfilePage extends State<ViewProfilePage> {
   @override
   initState() {
     super.initState();
-    
+
     try {
-      amplifyState.getUserProfilePicture(viewUser).then((result) => setState(() {
-        image = NetworkImage(result);
-      }));
-    }
-    catch (_) {
+      amplifyState
+          .getUserProfilePicture(viewUser)
+          .then((result) => setState(() {
+                image = NetworkImage(result);
+              }));
+    } catch (_) {
       image = const NetworkImage('https://picsum.photos/250?image=9');
     }
 
@@ -74,24 +74,21 @@ class _ViewProfilePage extends State<ViewProfilePage> {
       debugPrint('Did we get status?');
       debugPrint(displayText);
     });
-
   }
 
   @override
   Widget build(BuildContext context) {
-    return
-        Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: Text(viewUser.Name.toString() + "'s Profile"),
-          ),
-          // bottomNavigationBar: menu(),
-          body: buildProfile(),
-        );
-
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(viewUser.Name.toString() + "'s Profile"),
+      ),
+      // bottomNavigationBar: menu(),
+      body: buildProfile(),
+    );
   }
 
   Widget buildProfile() {
@@ -193,18 +190,15 @@ class _ViewProfilePage extends State<ViewProfilePage> {
           ),
           onPressed: () {
             if (status == 'NoMatch') {
-              action = amplifyState.createMatch(viewUser);
+              amplifyState.createMatch(viewUser);
             } else if (status == 'Match') {
-              amplifyState
-                  .getMatch(viewUser)
-                  .then((curMatch) => action = amplifyState.unMatch(curMatch));
+              amplifyState.deleteMatches(viewUser);
             } else if (status == 'Outgoing') {
+              amplifyState.deleteMatches(viewUser);
+            } else if (status == 'Incoming') {
               amplifyState
                   .getMatch(viewUser)
-                  .then((curMatch) => action = amplifyState.unMatch(curMatch));
-            } else if (status == 'Incoming') {
-              amplifyState.getMatch(viewUser).then(
-                  (curMatch) => action = amplifyState.approveRequest(curMatch));
+                  .then((curMatch) => amplifyState.approveRequest(curMatch));
             }
             Future.delayed(const Duration(milliseconds: 500), () {
               amplifyState.getMatchStatus(viewUser).then((tempStatus) {
@@ -242,13 +236,8 @@ class _ViewProfilePage extends State<ViewProfilePage> {
     // Future.delayed(const Duration(milliseconds: 5000), () {return Column();});
   }
 
-
-
   Widget ProfileWidget(BuildContext context) {
-    final color = Theme
-        .of(context)
-        .colorScheme
-        .primary;
+    final color = Theme.of(context).colorScheme.primary;
 
     return Center(
       child: Stack(
@@ -259,33 +248,31 @@ class _ViewProfilePage extends State<ViewProfilePage> {
     );
   }
 
-    Widget buildImage() {
+  Widget buildImage() {
+    return ClipOval(
+      child: Material(
+        color: Colors.transparent,
+        child: Ink.image(
+          image: image,
+          fit: BoxFit.cover,
+          width: 128,
+          height: 128,
+          child: InkWell(onTap: onClicked),
+        ),
+      ),
+    );
+  }
 
-      return ClipOval(
-        child: Material(
-          color: Colors.transparent,
-          child: Ink.image(
-            image: image,
-            fit: BoxFit.cover,
-            width: 128,
-            height: 128,
-            child: InkWell(onTap: onClicked),
-          ),
+  Widget buildCircle({
+    required Widget child,
+    required double all,
+    required Color color,
+  }) =>
+      ClipOval(
+        child: Container(
+          padding: EdgeInsets.all(all),
+          color: color,
+          child: child,
         ),
       );
-    }
-
-
-    Widget buildCircle({
-      required Widget child,
-      required double all,
-      required Color color,
-    }) =>
-        ClipOval(
-          child: Container(
-            padding: EdgeInsets.all(all),
-            color: color,
-            child: child,
-          ),
-        );
 }

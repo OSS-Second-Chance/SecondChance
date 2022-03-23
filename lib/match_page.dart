@@ -1,149 +1,116 @@
 import 'package:flutter/material.dart';
-import 'package:second_chance/models/Location.dart';
-import 'models/UserModel.dart';
+import 'package:second_chance/amplify.dart';
+import 'package:second_chance/models/UserModel.dart';
+import 'location_page.dart';
 import 'models/Match.dart';
 import 'dart:async';
-import 'match_page.dart';
-import 'view_profile_page.dart';
-import 'messaging_page.dart';
-import 'profile_page.dart';
-import 'amplify.dart';
 
-class MatchPage extends StatelessWidget {
+import 'messaging_page.dart';
+
+import 'amplify.dart';
+import 'view_profile_page.dart';
+
+class MatchPage extends StatefulWidget {
   const MatchPage({Key? key, required this.amplifyState}) : super(key: key);
 
   final AmplifyState amplifyState;
   // final curUser = amplifyState.getUserProfile();
+  @override
+  _MatchPage createState() {
+    // ignore: no_logic_in_create_state
+    return _MatchPage(amplifyState);
+  }
+}
+
+class _MatchPage extends State<MatchPage> {
+  late AmplifyState amplifyState;
+  _MatchPage(this.amplifyState);
+
+  @override
+  initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(physics: const BouncingScrollPhysics(), children: [
-      const Text(
-        "Matches",
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+    // Future<List<Match>> myMatches = amplifyState.getMyMatches();
+    Future<List<UserModel>> myMatches = amplifyState.getMyMatchesUsers();
+    Future<List<UserModel>> myAdmirers = amplifyState.getMyAdmirersUsers();
+    Future<List<UserModel>> myRequests = amplifyState.getMyRequestsUsers();
+
+    Color color = Theme.of(context).primaryColor;
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text("Your Second Chances"),
       ),
-      // const SizedBox(height: 4),
-      _buildMatches(amplifyState.getMyMatches()),
-      // const SizedBox(height: 24),
-      const Text(
-        "Admirers",
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+      // bottomNavigationBar: menu(),
+      body: Column(
+        children: [
+          buildLabel('My Matches'),
+          _buildMatches(myMatches),
+          buildLabel('My Admirers'),
+          _buildMatches(myAdmirers),
+          buildLabel('My Requests'),
+          _buildMatches(myRequests),
+          // _buildAdmirers(),
+          // _buildRequests()
+        ],
       ),
-      // const SizedBox(height: 4),
-      _buildAdmirers(),
-      // const SizedBox(height: 24),
-      const Text(
-        "Requests",
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-      ),
-      // const SizedBox(height: 4),
-      _buildRequests(),
-      // const SizedBox(height: 24),
-    ]);
+    );
   }
 
-  Widget _buildMatches(Future<List<Match>> matchType) {
-    return FutureBuilder<List<Match>>(
+  Widget buildLabel(String label) => Column(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+          ),
+          const SizedBox(height: 4),
+        ],
+      );
+
+  Widget _buildMatches(Future<List<UserModel>> matchType) {
+    //debugPrint("SHOULD BE After This");
+    //debugPrint(matchType.toString());
+    return FutureBuilder<List<UserModel>>(
         future: matchType,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return CircularProgressIndicator();
           } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
-            return ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(context, snapshot.data![index]);
-                });
+            if (snapshot.data!.isEmpty) {
+              return Text('No Users');
+            }
+            debugPrint("Check 3");
+            return Text('User: ${snapshot.data!.first.Name}');
           } else {
-            return Container(
-              child: Text('Loading'),
-            );
+            return Text('Loading');
           }
         });
   }
 
-  Widget _buildAdmirers() {
-    Future<List<Match>> allAdmirers = amplifyState.getMyAdmirers();
-    return FutureBuilder<List<Match>>(
-        future: allAdmirers,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
-            return ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(context, snapshot.data![index]);
-                });
-          } else {
-            return Container(
-              child: Text('Loading'),
-            );
-          }
-        });
-  }
-
-  Widget _buildRequests() {
-    Future<List<Match>> allRequests = amplifyState.getMyRequests();
-    return FutureBuilder<List<Match>>(
-        future: allRequests,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
-            return ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(context, snapshot.data![index]);
-                });
-          } else {
-            return Container(
-              child: Text('Loading'),
-            );
-          }
-        });
-  }
-
-  Widget _buildRow(BuildContext context, Match thisMatch) {
-    return Card(
-        child: ListTile(
-            leading: Icon(Icons.person, color: Colors.black, size: 50),
-            title: Text(
-              thisMatch.User2Name.toString(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+  Column _buildButtonColumn(Color color, IconData icon, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: color),
+        Container(
+          margin: const EdgeInsets.only(top: 8),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: color,
             ),
-            subtitle: Text(thisMatch.User1Name.toString()),
-            trailing:
-                Icon(Icons.person_add_alt_1, color: Colors.black, size: 40),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MessagingPage(
-                          // viewUser: thisMatch,
-                          // amplifyState: amplifyState,
-                          )));
-            }));
+          ),
+        ),
+      ],
+    );
   }
 }

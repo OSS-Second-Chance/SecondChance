@@ -158,12 +158,29 @@ class AmplifyState {
     }
   }
 
+  Future<List<UserModel>> getAllUsersNM() async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+      List<UserModel> allUsers = await Amplify.DataStore.query(
+          UserModel.classType,
+          where: UserModel.AUTHUSERNAME.ne(activeID));
+
+      return (allUsers);
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   Future<String> _fetchSession() async {
-      AuthSession res = await Amplify.Auth.fetchAuthSession(
-        options: CognitoSessionOptions(getAWSCredentials: true),
-      );
-      String identityId = (res as CognitoAuthSession).identityId!;
-      return identityId;
+    AuthSession res = await Amplify.Auth.fetchAuthSession(
+      options: CognitoSessionOptions(getAWSCredentials: true),
+    );
+    String identityId = (res as CognitoAuthSession).identityId!;
+    return identityId;
   }
 
   void createUser() async {
@@ -272,6 +289,25 @@ class AmplifyState {
     }
   }
 
+  Future<UserModel> getUserfromID(String? userID) async {
+    try {
+      final theseUsers = await Amplify.DataStore.query(UserModel.classType,
+          where: UserModel.AUTHUSERNAME.eq(userID));
+
+      if (theseUsers.isEmpty) {
+        debugPrint("No objects with ID: $userID");
+        // return null;
+      }
+
+      final thisUser = theseUsers.first;
+
+      return thisUser;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   void updateProfileAttribute(String attr, String newValue) async {
     try {
       final userToUpdate = await getUserProfile();
@@ -337,6 +373,37 @@ class AmplifyState {
     }
   }
 
+  Future<List<UserModel>> getMyMatchesUsers() async {
+    try {
+      List<UserModel> matchUsers = [];
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final isUser = Match.USER1ID.eq(activeID).or(Match.USER2ID.eq(activeID));
+      final myMatches = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER1CHECK
+              .eq(true)
+              .and(Match.USER2CHECK.eq(true))
+              .and(isUser));
+
+      if (myMatches.isEmpty) {
+        debugPrint("You got no matches: ${activeID}");
+        return matchUsers;
+      }
+      myMatches.forEach((element) {
+        if (element.User1ID != activeID) {
+          getUserfromID(element.User1ID).then((value) => matchUsers.add(value));
+        } else if (element.User2ID != activeID) {
+          getUserfromID(element.User2ID).then((value) => matchUsers.add(value));
+        }
+      });
+      return matchUsers;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   Future<List<Match>> getMyAdmirers() async {
     try {
       AuthUser? curUser = await Amplify.Auth.getCurrentUser();
@@ -360,6 +427,38 @@ class AmplifyState {
     }
   }
 
+  Future<List<UserModel>> getMyAdmirersUsers() async {
+    try {
+      List<UserModel> admirerUsers = [];
+      AuthUser? curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+      final user2Null =
+          Match.USER2ID.eq(activeID).and(Match.USER2CHECK.eq(null));
+
+      final myAdmirers = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER1CHECK.eq(true).and(user2Null));
+
+      if (myAdmirers.isEmpty) {
+        debugPrint("You got no matches: ${activeID}");
+        // return null;
+      }
+      myAdmirers.forEach((element) {
+        if (element.User1ID != activeID) {
+          getUserfromID(element.User1ID)
+              .then((value) => admirerUsers.add(value));
+        } else if (element.User2ID != activeID) {
+          getUserfromID(element.User2ID)
+              .then((value) => admirerUsers.add(value));
+        }
+      });
+      return admirerUsers;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   Future<List<Match>> getMyRequests() async {
     try {
       AuthUser? curUser = await Amplify.Auth.getCurrentUser();
@@ -377,6 +476,38 @@ class AmplifyState {
       }
 
       return myRequests;
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
+  Future<List<UserModel>> getMyRequestsUsers() async {
+    try {
+      List<UserModel> requestUsers = [];
+      AuthUser? curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+      final user1True =
+          Match.USER1ID.eq(activeID).and(Match.USER1CHECK.eq(true));
+
+      final myRequests = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER2CHECK.eq(null).and(user1True));
+
+      if (myRequests.isEmpty) {
+        debugPrint("You got no matches: ${activeID}");
+        // return null;
+      }
+      myRequests.forEach((element) {
+        if (element.User1ID != activeID) {
+          getUserfromID(element.User1ID)
+              .then((value) => requestUsers.add(value));
+        } else if (element.User2ID != activeID) {
+          getUserfromID(element.User2ID)
+              .then((value) => requestUsers.add(value));
+        }
+      });
+      return requestUsers;
     } catch (e) {
       print(e);
       throw e;
@@ -518,6 +649,46 @@ class AmplifyState {
     }
   }
 
+  void deleteMatches(UserModel viewUser) async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final isUserA = Match.USER1ID
+          .eq(activeID)
+          .and(Match.USER2ID.eq(viewUser.AuthUsername));
+      final isUserB = Match.USER1ID
+          .eq(viewUser.AuthUsername)
+          .and(Match.USER2ID.eq(activeID));
+
+      final both = isUserA.or(isUserB);
+      final myMatches =
+          await Amplify.DataStore.query(Match.classType, where: both);
+      if (myMatches.isEmpty) {
+        debugPrint("No Matches");
+        return;
+      }
+
+      myMatches.forEach((element) async {
+        debugPrint('Matches to Delete XXX');
+        debugPrint(element.User1Name);
+        debugPrint(element.User2Name);
+        try {
+          await Amplify.DataStore.delete(element,
+              where: Match.USER1ID
+                  .eq(element.User1ID)
+                  .and(Match.USER2ID.eq(element.User2ID)));
+          print('Deleted a match');
+        } on DataStoreException catch (e) {
+          print('Delete failed: $e');
+        }
+      });
+    } catch (e) {
+      print(e);
+      throw e;
+    }
+  }
+
   Future<String> getMatchStatus(UserModel viewUser) async {
     try {
       AuthUser? curUser;
@@ -586,7 +757,6 @@ class AmplifyState {
     Directory imageDir = await getApplicationDocumentsDirectory();
     File image = new File(join(imageDir.path, "defaultProfile.png"));
     image.writeAsBytes(imageGet.bodyBytes).then((result) async {
-
       final uploadOptions = S3UploadFileOptions(
         accessLevel: StorageAccessLevel.protected,
       );
@@ -594,15 +764,14 @@ class AmplifyState {
       final key = "profilePicture";
       final file = File(image.path);
       try {
-        final UploadFileResult result =
-            await Amplify.Storage.uploadFile(
+        final UploadFileResult result = await Amplify.Storage.uploadFile(
             options: uploadOptions,
             local: file,
             key: key,
             onProgress: (progress) {
-              print("Fraction completed: " + progress.getFractionCompleted().toString());
-            }
-        );
+              print("Fraction completed: " +
+                  progress.getFractionCompleted().toString());
+            });
         print('Successfully uploaded image: ${result.key}');
       } on StorageException catch (e) {
         print('Error uploading image: $e');
@@ -613,7 +782,7 @@ class AmplifyState {
   Future<void> uploadImage(ProfilePageState state) async {
     // Select image from user's gallery
     final XFile? pickedFile =
-    await picker.pickImage(source: ImageSource.gallery);
+        await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile == null) {
       print('No image selected');
@@ -626,17 +795,16 @@ class AmplifyState {
     final key = "profilePicture";
     final file = File(pickedFile.path);
     try {
-      final UploadFileResult result =
-      await Amplify.Storage.uploadFile(
+      final UploadFileResult result = await Amplify.Storage.uploadFile(
           options: uploadOptions,
           local: file,
           key: key,
           onProgress: (progress) {
-            print("Fraction completed: " + progress.getFractionCompleted().toString());
-          }
-      );
+            print("Fraction completed: " +
+                progress.getFractionCompleted().toString());
+          });
       print('Successfully uploaded image: ${result.key}');
-      getDownloadUrl().then( (_) {
+      getDownloadUrl().then((_) {
         state.newProfileImage();
       });
     } on StorageException catch (e) {
@@ -645,28 +813,23 @@ class AmplifyState {
   }
 
   Future<String> getUserProfilePicture(UserModel user) async {
-      final uploadOptions = S3GetUrlOptions(
-          accessLevel: StorageAccessLevel.protected,
-          targetIdentityId: user.CognitoIdentityId
-      );
+    final uploadOptions = S3GetUrlOptions(
+        accessLevel: StorageAccessLevel.protected,
+        targetIdentityId: user.CognitoIdentityId);
 
-
-      return Amplify.Storage.getUrl(key: 'profilePicture',
-          options: uploadOptions).then((result) {
-        return result.url;
-      });
-
+    return Amplify.Storage.getUrl(key: 'profilePicture', options: uploadOptions)
+        .then((result) {
+      return result.url;
+    });
   }
-
 
   Future<String> getDownloadUrl() async {
     try {
       final uploadOptions = S3GetUrlOptions(
         accessLevel: StorageAccessLevel.protected,
       );
-      final GetUrlResult result =
-      await Amplify.Storage.getUrl(key: 'profilePicture',
-      options: uploadOptions);
+      final GetUrlResult result = await Amplify.Storage.getUrl(
+          key: 'profilePicture', options: uploadOptions);
       profilePicture = NetworkImage(result.url);
       return result.url;
       // NOTE: This code is only for demonstration
