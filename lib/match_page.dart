@@ -40,13 +40,6 @@ class _MatchPage extends State<MatchPage> {
 
     Color color = Theme.of(context).primaryColor;
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text("Your Second Chances"),
-      ),
       // bottomNavigationBar: menu(),
       body: Column(
         children: [
