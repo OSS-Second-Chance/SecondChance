@@ -38,17 +38,20 @@ class _MatchPage extends State<MatchPage> {
     Future<List<UserModel>> myAdmirers = amplifyState.getMyAdmirersUsers();
     Future<List<UserModel>> myRequests = amplifyState.getMyRequestsUsers();
 
-    Color color = Theme.of(context).primaryColor;
+    Color _color = Theme.of(context).primaryColor;
     return Scaffold(
       // bottomNavigationBar: menu(),
       body: Column(
         children: [
-          buildLabel('My Matches'),
-          _buildMatches(myMatches),
-          buildLabel('My Admirers'),
-          _buildMatches(myAdmirers),
-          buildLabel('My Requests'),
-          _buildMatches(myRequests),
+          const SizedBox(height: 12),
+          buildLabelTest('My Matches'),
+          _buildMatches(myMatches, 'Matches'),
+          const SizedBox(height: 48),
+          buildLabelTest('My Admirers'),
+          _buildMatches(myAdmirers, 'Admirers'),
+          const SizedBox(height: 48),
+          buildLabelTest('My Requests'),
+          _buildMatches(myRequests, 'Requests'),
           // _buildAdmirers(),
           // _buildRequests()
         ],
@@ -56,17 +59,36 @@ class _MatchPage extends State<MatchPage> {
     );
   }
 
-  Widget buildLabel(String label) => Column(
-        children: [
-          Text(
+  Widget buildLabelTest(String label) => Column(children: <Widget>[
+        Container(
+          margin: EdgeInsets.all(10),
+          padding: EdgeInsets.only(left: 20),
+          child: Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+                color: Colors.blueAccent,
+                decoration: TextDecoration.underline),
           ),
-          const SizedBox(height: 4),
-        ],
-      );
+        ),
+      ]);
+  Widget buildEmpty(String output) => Column(children: <Widget>[
+        Container(
+          margin: EdgeInsets.only(left: 10, right: 10),
+          padding: EdgeInsets.only(left: 20),
+          child: Text(
+            output,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.black26,
+            ),
+          ),
+        ),
+      ]);
 
-  Widget _buildMatches(Future<List<UserModel>> matchType) {
+  Widget _buildMatches(Future<List<UserModel>> matchType, String type) {
     //debugPrint("SHOULD BE After This");
     //debugPrint(matchType.toString());
     return FutureBuilder<List<UserModel>>(
@@ -76,34 +98,16 @@ class _MatchPage extends State<MatchPage> {
             return CircularProgressIndicator();
           } else if (snapshot.hasData) {
             if (snapshot.data!.isEmpty) {
-              return Text('No Users');
+              if (type == 'Requests') {
+                return buildEmpty("Visit a recent location\nto send out $type");
+              }
+              return buildEmpty("It's okay!\nYou'll get some $type soon");
             }
-            debugPrint("Check 3");
+            debugPrint("$type:");
             return Text('User: ${snapshot.data!.first.Name}');
           } else {
             return Text('Loading');
           }
         });
-  }
-
-  Column _buildButtonColumn(Color color, IconData icon, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, color: color),
-        Container(
-          margin: const EdgeInsets.only(top: 8),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: color,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
