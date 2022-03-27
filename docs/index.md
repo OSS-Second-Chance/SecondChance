@@ -16,7 +16,7 @@
 3. If creating a new account, click **Sign Up** and verify your password.  If logging in, press login and you are finished!   
 4. Continue to input the information requested   
 5. You will recieve a verification email in your inbox, input the code to complete signup!         
-<img src="assets/images/wireframe_login.jpg" height="700" alt="Login Wireframe Image">
+<img src="assets/images/wireframe_login.jpg" alt="Login Wireframe Image">
 
 ### App Navigation <a name="app_navigation"></a>    
 Currently we have 4 main tabs, from left to right    
