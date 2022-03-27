@@ -2,6 +2,7 @@
 
 ## Table of Contents
 * [User Manual](#manual)
+   * [Installation](#installation)
    * [Account Creation](#account_creation)
    * [App Navigation](#app_navigation)
    * [Editing your Profile](#editting_profile)
@@ -9,6 +10,11 @@
 * [Support](#support)
 
 ## User Manual <a name="manual"></a>
+
+### Installation <a name="installation"></a>
+Visit our [Releases](https://github.com/OSS-Second-Chance/SecondChance_Org/releases/) to get the current version     
+Currently we are only building and releasing on Android, but we have plans for iOS builds in the future!     
+We have several installation options present based on your hardware.  A general apk, specialized apk's, and an appbundle are available for download
 
 ### Account Creation / Login <a name="account_creation"></a>
 1. Put in your email for your username. Note: only 1 account per email is allowed in the system
