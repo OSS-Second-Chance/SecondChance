@@ -1,27 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:second_chance/amplify.dart';
 import 'models/UserModel.dart';
+import 'models/Location.dart';
 import 'amplify.dart';
 
 class ViewProfilePage extends StatefulWidget {
   const ViewProfilePage(
-      {Key? key, required this.viewUser, required this.amplifyState})
+      {Key? key,
+      required this.viewUser,
+      required this.location,
+      required this.amplifyState})
       : super(key: key);
 
   final UserModel viewUser;
+  final Location location;
   final AmplifyState amplifyState;
 
   @override
   _ViewProfilePage createState() {
     // ignore: no_logic_in_create_state
-    return _ViewProfilePage(viewUser, amplifyState);
+    return _ViewProfilePage(viewUser, location, amplifyState);
   }
 }
 
 class _ViewProfilePage extends State<ViewProfilePage> {
   late UserModel viewUser;
   late AmplifyState amplifyState;
-  _ViewProfilePage(this.viewUser, this.amplifyState);
+  late Location location;
+  _ViewProfilePage(this.viewUser, this.location, this.amplifyState);
   NetworkImage image = NetworkImage('https://picsum.photos/250?image=9');
   final VoidCallback onClicked = () async {};
   final isEdit = false;
@@ -190,7 +196,7 @@ class _ViewProfilePage extends State<ViewProfilePage> {
           ),
           onPressed: () {
             if (status == 'NoMatch') {
-              amplifyState.createMatch(viewUser);
+              amplifyState.createMatch(viewUser, location);
             } else if (status == 'Match') {
               amplifyState.deleteMatches(viewUser);
             } else if (status == 'Outgoing') {

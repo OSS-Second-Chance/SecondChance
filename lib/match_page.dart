@@ -25,22 +25,38 @@ class MatchPage extends StatefulWidget {
 class _MatchPage extends State<MatchPage> {
   late AmplifyState amplifyState;
   _MatchPage(this.amplifyState);
+  late Future<List<UserModel>> myMatches;
+  late Future<List<UserModel>> myAdmirers;
+  late Future<List<UserModel>> myRequests;
 
   @override
   initState() {
     super.initState();
+    myMatches = amplifyState.getMyMatchesUsers();
+    myAdmirers = amplifyState.getMyAdmirersUsers();
+    myRequests = amplifyState.getMyRequestsUsers();
   }
 
   @override
   Widget build(BuildContext context) {
     // Future<List<Match>> myMatches = amplifyState.getMyMatches();
-    Future<List<UserModel>> myMatches = amplifyState.getMyMatchesUsers();
-    Future<List<UserModel>> myAdmirers = amplifyState.getMyAdmirersUsers();
-    Future<List<UserModel>> myRequests = amplifyState.getMyRequestsUsers();
 
     Color _color = Theme.of(context).primaryColor;
+
     return Scaffold(
       // bottomNavigationBar: menu(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          print('FloatingActionButton pressed ...');
+        },
+        backgroundColor: Color(0xFF4B39EF),
+        elevation: 8,
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
       body: Column(
         children: [
           const SizedBox(height: 12),
@@ -149,7 +165,6 @@ class _MatchPage extends State<MatchPage> {
                                 children:
                                     List.generate(matchUser.length, (rowIndex) {
                                   final viewUser = matchUser[rowIndex];
-
 
                                   return Container(
                                     width: 100,

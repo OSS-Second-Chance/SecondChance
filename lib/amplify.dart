@@ -563,7 +563,7 @@ class AmplifyState {
     }
   }
 
-  void createMatch(UserModel viewUser) async {
+  void createMatch(UserModel viewUser, Location location) async {
     getUserProfile().then((curUser) {
       debugPrint('HERE XXXXX');
       debugPrint(curUser.Name.toString());
@@ -584,6 +584,7 @@ class AmplifyState {
           User1Check: true,
           User2Name: viewUser.Name,
           User2ID: viewUser.AuthUsername,
+          Location: location.id,
           // User2Check: true,
         );
 
