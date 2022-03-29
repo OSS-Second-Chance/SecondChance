@@ -37,7 +37,6 @@ class _MatchPage extends State<MatchPage> {
     Future<List<UserModel>> myMatches = amplifyState.getMyMatchesUsers();
     Future<List<UserModel>> myAdmirers = amplifyState.getMyAdmirersUsers();
     Future<List<UserModel>> myRequests = amplifyState.getMyRequestsUsers();
-    Image image = Image.network('https://picsum.photos/250?image=9');
 
     Color _color = Theme.of(context).primaryColor;
     return Scaffold(
@@ -51,6 +50,30 @@ class _MatchPage extends State<MatchPage> {
         ],
       ),
     );
+  }
+
+  Widget buildImage(UserModel user) {
+    Future<String> userProfilePicUrl;
+    userProfilePicUrl = amplifyState.getUserProfilePicture(user);
+    return FutureBuilder(
+        future: userProfilePicUrl,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return ClipOval(
+              child: Material(
+                color: Colors.transparent,
+                child: Ink.image(
+                  image: NetworkImage(snapshot.data!.toString()),
+                  fit: BoxFit.cover,
+                  width: 50,
+                  height: 50,
+                  child: InkWell(),
+                ),
+              ),
+            );
+          }
+          return const Icon(Icons.person, color: Colors.black, size: 50);
+        });
   }
 
   Widget buildMatchType(
@@ -90,8 +113,6 @@ class _MatchPage extends State<MatchPage> {
                       ),
                     );
                   }
-                  Image image =
-                      Image.network('https://picsum.photos/250?image=9');
                   List<UserModel> selectedUser = snapshot.data!;
                   // Return an empty Container when the document does not exist.
                   if (snapshot.data!.isEmpty) {
@@ -129,16 +150,6 @@ class _MatchPage extends State<MatchPage> {
                                     List.generate(matchUser.length, (rowIndex) {
                                   final viewUser = matchUser[rowIndex];
 
-                                  // @Lucas I tried implementing it here just wasn't working
-                                  // try {
-                                  //   amplifyState
-                                  //       .getUserProfilePicture(viewUser)
-                                  //       .then((result) => setState(() {
-                                  //             image = Image.network(result);
-                                  //           }));
-                                  // } catch (_) {
-
-                                  // }
 
                                   return Container(
                                     width: 100,
@@ -154,7 +165,7 @@ class _MatchPage extends State<MatchPage> {
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
                                             ),
-                                            child: image,
+                                            child: buildImage(viewUser),
                                           ),
                                         ),
                                         Align(
