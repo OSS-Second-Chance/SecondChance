@@ -12,8 +12,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginState extends State<LoginScreen> {
-  GlobalKey<_LoginState> _myKey = GlobalKey();
-  Duration get loginTime => Duration(milliseconds: 2250);
+  final GlobalKey<_LoginState> _myKey = GlobalKey();
+  Duration get loginTime => const Duration(milliseconds: 2250);
   late AmplifyState amplifyState;
 
   @override
@@ -91,11 +91,49 @@ class _LoginState extends State<LoginScreen> {
     });
   }
 
-  Future<String?> _recoverPassword(String name) {
-    debugPrint('Name: $name');
-    return Future.delayed(loginTime).then((_) {
-      return null;
+  Future<String?> _recoverPassword(String email) {
+    debugPrint('In recover password');
+
+    return amplifyState.resetPassword(email).then((result) {
+      if (result == 'SuccessfulCodeSend') {
+        return null;
+      }
+      else {
+        return result;
+      }
+
     });
+
+  }
+
+  Future<String?> _recoverPasswordConfirm(String code, LoginData data) {
+    debugPrint('in recover password confirm');
+    debugPrint('Reset Code: $code\nLoginData: $data');
+    return amplifyState.resetPasswordConfirm(data.name, code, data.password).then((result) {
+      if (result == 'SuccessfulPasswordReset') {
+        return null;
+      }
+      else {
+        return result;
+      }
+
+    });
+
+  }
+
+  Future<String?> _resendVerificationCode(SignupData data) {
+    debugPrint('in resend verification code');
+    debugPrint('SignupData: $data');
+    return amplifyState.resendSignUp(data.name.toString()).then((result) {
+      if (result == 'SuccessfulResendSignup') {
+        return null;
+      }
+      else {
+        return result;
+      }
+
+    });
+
   }
 
   String? _passwordValidator(String? password) {
@@ -117,11 +155,13 @@ class _LoginState extends State<LoginScreen> {
       onSignup: _signupUser,
       onConfirmSignup: _confirmSignUp,
       passwordValidator: _passwordValidator,
+      onConfirmRecover: _recoverPasswordConfirm,
       additionalSignupFields: additionalAttributes,
       onSubmitAnimationCompleted: () {
         Navigator.of(context).popUntil((route) => route.isFirst);
       },
       onRecoverPassword: _recoverPassword,
+      onResendCode: _resendVerificationCode,
     );
   }
 

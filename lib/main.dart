@@ -63,14 +63,15 @@ class MyHomePageState extends State<DashboardScreen>
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
+
   String AppStage = "Profile";
   late Widget AppState;
   // String dropDownValue;
   // TextEditingController textController;
+
   // var locationList = <Location>[].obs;
 
   late TabController _controller;
-  int _selectedIndex = 0;
   List<Widget> list = [
     const Tab(icon: Icon(Icons.location_on_sharp)),
     const Tab(icon: Icon(Icons.social_distance_outlined)),
@@ -85,45 +86,32 @@ class MyHomePageState extends State<DashboardScreen>
 
     _controller.addListener(() {
       setState(() {
-        _selectedIndex = _controller.index;
       });
-      print("Selected Index: " + _controller.index.toString());
+      debugPrint("Selected Index: " + _controller.index.toString());
     });
-    ;
     amplifyState.configureAmplify(context, amplifyState, this);
   }
 
-  void setUserState() {
-    setState(() {
-      bool test = amplifyState.getLoggedIn();
-      debugPrint("in set user state, logged in: $test");
-      if (amplifyState.getLoggedIn()) {
-        userButton = "Sign Out";
-      } else {
-        userButton = "Sign In";
-      }
-    });
-  }
 
   Widget _buildRow(Location curLocation) {
     return Card(
         child: ListTile(
-            leading: Icon(Icons.wine_bar, color: Colors.black, size: 50),
+            leading: const Icon(Icons.wine_bar, color: Colors.black, size: 50),
             title: Text(
               curLocation.BarName.toString(),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
             subtitle: Text(curLocation.Region.toString()),
-            trailing: Icon(Icons.add_location_alt_sharp,
+            trailing: const Icon(Icons.add_location_alt_sharp,
                 color: Colors.orange, size: 40),
             onTap: () {
               Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) => LocationPage(
-                            location: curLocation,
-                            amplifyState: amplifyState,
-                          )));
+                        location: curLocation,
+                        amplifyState: amplifyState,
+                      )));
             }));
   }
 
@@ -237,12 +225,12 @@ class MyHomePageState extends State<DashboardScreen>
         future: locations,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           } else if (snapshot.hasData) {
             if (snapshot.data!.isEmpty) {
-              return Text('None');
+              return const Text('None');
             }
-            print(snapshot.data.toString());
+            debugPrint(snapshot.data.toString());
             return ListView.builder(
                 // padding: const EdgeInsets.all(16),
                 itemCount: (snapshot.data!.length * 2),
@@ -255,34 +243,11 @@ class MyHomePageState extends State<DashboardScreen>
                   return _buildRowNew(snapshot.data![index]);
                 });
           } else {
-            return Container(
-              child: Text('Loading'),
-            );
+            return const Text('Loading');
           }
         });
   }
 
-  // Widget _buildRow(Location curLocation) {
-  //   return Card(
-  //       child: ListTile(
-  //           leading: Icon(Icons.wine_bar, color: Colors.black, size: 50),
-  //           title: Text(
-  //             curLocation.BarName.toString(),
-  //             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-  //           ),
-  //           subtitle: Text(curLocation.Region.toString()),
-  //           trailing: Icon(Icons.add_location_alt_sharp,
-  //               color: Colors.orange, size: 40),
-  //           onTap: () {
-  //             Navigator.push(
-  //                 context,
-  //                 MaterialPageRoute(
-  //                     builder: (context) => LocationPage(
-  //                           location: curLocation,
-  //                           amplifyState: amplifyState,
-  //                         )));
-  //           }));
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -295,34 +260,34 @@ class MyHomePageState extends State<DashboardScreen>
     return MaterialApp(
         home: Scaffold(
             appBar: AppBar(
-              bottom: TabBar(
-                onTap: (index) {},
-                controller: _controller,
-                tabs: list,
-              ),
+                bottom: TabBar(
+                  onTap: (index) {},
+                  controller: _controller,
+                  tabs: list,
+                ),
 
-              // Here we take the value from the MyHomePage object that was created by
-              // the App.build method, and use it to set our appbar title.
-              title: Text(widget.title),
-              actions: <Widget>[
-                Padding(
-                    padding: const EdgeInsets.only(right: 20.0),
-                    child: GestureDetector(
-                        onTap: () {
-                          if (amplifyState.getLoggedIn()) {
-                            amplifyState.signOut();
-                          } else {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => LoginScreen(
-                                        key: null,
-                                        amplifyState: amplifyState)));
-                          }
+                // Here we take the value from the MyHomePage object that was created by
+                // the App.build method, and use it to set our appbar title.
+                title: Text(widget.title),
+                actions: [
+                    TextButton(
+                        style: TextButton.styleFrom(
+                          primary: Colors.white,
+                        ),
+                        onPressed: () {
+
+                          amplifyState.signOut();
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LoginScreen(
+                                      key: null,
+                                      amplifyState: amplifyState)));
                         },
-                        child: Text(userButton)))
-              ],
-            ),
+                        child: const Text("Sign Out")
+                    )
+
+                ]),
             // bottomNavigationBar: menu(),
 
             body: TabBarView(controller: _controller, children: [
