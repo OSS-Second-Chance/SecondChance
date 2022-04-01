@@ -1,149 +1,289 @@
 import 'package:flutter/material.dart';
-import 'package:second_chance/models/Location.dart';
-import 'models/UserModel.dart';
+import 'package:second_chance/amplify.dart';
+import 'package:second_chance/models/UserModel.dart';
+import 'location_page.dart';
 import 'models/Match.dart';
 import 'dart:async';
-import 'match_page.dart';
-import 'view_profile_page.dart';
-import 'messaging_page.dart';
-import 'profile_page.dart';
-import 'amplify.dart';
 
-class MatchPage extends StatelessWidget {
+import 'messaging_page.dart';
+
+import 'amplify.dart';
+import 'view_profile_page.dart';
+import 'models/Location.dart';
+
+class MatchPage extends StatefulWidget {
   const MatchPage({Key? key, required this.amplifyState}) : super(key: key);
 
   final AmplifyState amplifyState;
   // final curUser = amplifyState.getUserProfile();
+  @override
+  _MatchPage createState() {
+    // ignore: no_logic_in_create_state
+    return _MatchPage(amplifyState);
+  }
+}
+
+class _MatchPage extends State<MatchPage> {
+  late AmplifyState amplifyState;
+  _MatchPage(this.amplifyState);
+  late Future<List<UserModel>> myMatches;
+  late Future<List<UserModel>> myAdmirers;
+  late Future<List<UserModel>> myRequests;
+  late Location _location;
+
+  @override
+  initState() {
+    super.initState();
+    myMatches = amplifyState.getMyMatchesUsers();
+    myAdmirers = amplifyState.getMyAdmirersUsers();
+    myRequests = amplifyState.getMyRequestsUsers();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView(physics: const BouncingScrollPhysics(), children: [
-      const Text(
-        "Matches",
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+    // Future<List<Match>> myMatches = amplifyState.getMyMatches();
+
+    Color _color = Theme.of(context).primaryColor;
+    amplifyState.getFirstLocation().then((_location) => null);
+
+    return Scaffold(
+      // bottomNavigationBar: menu(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          print('FloatingActionButton pressed ...');
+        },
+        backgroundColor: Color(0xFF4B39EF),
+        elevation: 8,
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+          size: 28,
+        ),
       ),
-      // const SizedBox(height: 4),
-      _buildMatches(amplifyState.getMyMatches()),
-      // const SizedBox(height: 24),
-      const Text(
-        "Admirers",
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+      body: Column(
+        children: [
+          const SizedBox(height: 12),
+          buildMatchType(myMatches, _color, 'My Matches'),
+          buildMatchType(myAdmirers, _color, 'My Admirers'),
+          buildMatchType(myRequests, _color, 'My Requests'),
+        ],
       ),
-      // const SizedBox(height: 4),
-      _buildAdmirers(),
-      // const SizedBox(height: 24),
-      const Text(
-        "Requests",
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-      ),
-      // const SizedBox(height: 4),
-      _buildRequests(),
-      // const SizedBox(height: 24),
-    ]);
+    );
   }
 
-  Widget _buildMatches(Future<List<Match>> matchType) {
-    return FutureBuilder<List<Match>>(
-        future: matchType,
+  Widget buildImage(UserModel user) {
+    Future<String> userProfilePicUrl;
+    userProfilePicUrl = amplifyState.getUserProfilePicture(user);
+    return FutureBuilder(
+        future: userProfilePicUrl,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
-            return ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(context, snapshot.data![index]);
-                });
-          } else {
-            return Container(
-              child: Text('Loading'),
+          if (snapshot.connectionState == ConnectionState.done) {
+            return ClipOval(
+              child: Material(
+                color: Colors.transparent,
+                child: Ink.image(
+                  image: NetworkImage(snapshot.data!.toString()),
+                  fit: BoxFit.cover,
+                  width: 50,
+                  height: 50,
+                  child: InkWell(),
+                ),
+              ),
             );
           }
+          return const Icon(Icons.person, color: Colors.black, size: 50);
         });
   }
 
-  Widget _buildAdmirers() {
-    Future<List<Match>> allAdmirers = amplifyState.getMyAdmirers();
-    return FutureBuilder<List<Match>>(
-        future: allAdmirers,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
-            return ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(context, snapshot.data![index]);
-                });
-          } else {
-            return Container(
-              child: Text('Loading'),
-            );
-          }
-        });
-  }
-
-  Widget _buildRequests() {
-    Future<List<Match>> allRequests = amplifyState.getMyRequests();
-    return FutureBuilder<List<Match>>(
-        future: allRequests,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
-            return ListView.builder(
-                padding: const EdgeInsets.all(8),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(context, snapshot.data![index]);
-                });
-          } else {
-            return Container(
-              child: Text('Loading'),
-            );
-          }
-        });
-  }
-
-  Widget _buildRow(BuildContext context, Match thisMatch) {
-    return Card(
-        child: ListTile(
-            leading: Icon(Icons.person, color: Colors.black, size: 50),
-            title: Text(
-              thisMatch.User2Name.toString(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+  Widget buildMatchType(
+          Future<List<UserModel>> matchType, Color _color, String label) =>
+      Expanded(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          scrollDirection: Axis.vertical,
+          children: [
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(20, 0, 0, 0),
+              child: Text(
+                label,
+                style: TextStyle(
+                    fontFamily: 'Lato',
+                    fontSize: 24,
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.bold,
+                    color: _color),
+              ),
             ),
-            subtitle: Text(thisMatch.User1Name.toString()),
-            trailing:
-                Icon(Icons.person_add_alt_1, color: Colors.black, size: 40),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MessagingPage(
-                          // viewUser: thisMatch,
-                          // amplifyState: amplifyState,
-                          )));
-            }));
-  }
+            Padding(
+              padding: EdgeInsetsDirectional.fromSTEB(15, 9, 0, 0),
+              child: FutureBuilder<List<UserModel>>(
+                future: matchType,
+                builder: (context, snapshot) {
+                  // Customize what your widget looks like when it's loading.
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    );
+                  }
+                  List<UserModel> selectedUser = snapshot.data!;
+                  // Return an empty Container when the document does not exist.
+                  if (snapshot.data!.isEmpty) {
+                    return Container();
+                  }
+                  final rowUsersRecord =
+                      selectedUser.isNotEmpty ? selectedUser.first : null;
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Padding(
+                          padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 5),
+                          child: FutureBuilder<List<UserModel>>(
+                            future: matchType,
+                            builder: (context, snapshot) {
+                              // Customize what your widget looks like when it's loading.
+                              if (!snapshot.hasData) {
+                                return Center(
+                                  child: SizedBox(
+                                    width: 50,
+                                    height: 50,
+                                    child: CircularProgressIndicator(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                );
+                              }
+                              List<UserModel> matchUser = snapshot.data!;
+                              return Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children:
+                                    List.generate(matchUser.length, (rowIndex) {
+                                  final viewUser = matchUser[rowIndex];
+
+                                  return Container(
+                                    width: 100,
+                                    height: 100,
+                                    child: new InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ViewProfilePage(
+                                                      viewUser: viewUser,
+                                                      // location: _location,
+                                                      amplifyState:
+                                                          amplifyState,
+                                                    )));
+                                      },
+                                      child: Stack(
+                                        children: [
+                                          Align(
+                                            alignment:
+                                                AlignmentDirectional(0, 0),
+                                            child: Container(
+                                              width: 90,
+                                              height: 90,
+                                              clipBehavior: Clip.antiAlias,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: buildImage(viewUser),
+                                            ),
+                                          ),
+                                          Align(
+                                            alignment:
+                                                AlignmentDirectional(0, 1.31),
+                                            child: Text(
+                                              viewUser.Name.toString()
+                                              // +'\n' +viewUser.Gender.toString()
+                                              ,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontFamily: 'Lato',
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+
+  // Widget buildLabelTest(String label) => Column(children: <Widget>[
+  //       Container(
+  //         margin: EdgeInsets.all(10),
+  //         padding: EdgeInsets.only(left: 20),
+  //         child: Text(
+  //           label,
+  //           style: const TextStyle(
+  //               fontWeight: FontWeight.bold,
+  //               fontSize: 24,
+  //               color: Colors.blueAccent,
+  //               decoration: TextDecoration.underline),
+  //         ),
+  //       ),
+  //     ]);
+  // Widget buildEmpty(String output) => Column(children: <Widget>[
+  //       Container(
+  //         margin: EdgeInsets.only(left: 10, right: 10),
+  //         padding: EdgeInsets.only(left: 20),
+  //         child: Text(
+  //           output,
+  //           style: const TextStyle(
+  //             fontWeight: FontWeight.bold,
+  //             fontSize: 16,
+  //             color: Colors.black26,
+  //           ),
+  //         ),
+  //       ),
+  //     ]);
+
+  // Widget _buildMatches(Future<List<UserModel>> matchType, String type) {
+  //   //debugPrint("SHOULD BE After This");
+  //   //debugPrint(matchType.toString());
+  //   return FutureBuilder<List<UserModel>>(
+  //       future: matchType,
+  //       builder: (context, snapshot) {
+  //         if (snapshot.connectionState == ConnectionState.waiting) {
+  //           return CircularProgressIndicator();
+  //         } else if (snapshot.hasData) {
+  //           if (snapshot.data!.isEmpty) {
+  //             if (type == 'Requests') {
+  //               return buildEmpty("Visit a recent location\nto send out $type");
+  //             }
+  //             return buildEmpty("It's okay!\nYou'll get some $type soon");
+  //           }
+  //           debugPrint("$type:");
+  //           return Text('User: ${snapshot.data!.first.Name}');
+  //         } else {
+  //           return Text('Loading');
+  //         }
+  //       });
+  // }
 }

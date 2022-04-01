@@ -58,21 +58,26 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => MyHomePageState();
 }
 
-class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderStateMixin{
+class MyHomePageState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
+
   String AppStage = "Profile";
   late Widget AppState;
+  // String dropDownValue;
+  // TextEditingController textController;
+
   // var locationList = <Location>[].obs;
 
   late TabController _controller;
-  int _selectedIndex = 0;
   List<Widget> list = [
     const Tab(icon: Icon(Icons.location_on_sharp)),
     const Tab(icon: Icon(Icons.social_distance_outlined)),
     const Tab(icon: Icon(Icons.messenger_rounded)),
-    const Tab(icon: Icon(Icons.settings_accessibility))];
+    const Tab(icon: Icon(Icons.settings_accessibility))
+  ];
 
   @override
   initState() {
@@ -80,46 +85,138 @@ class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderSt
     _controller = TabController(length: list.length, vsync: this);
 
     _controller.addListener(() {
-      setState(() {
-        _selectedIndex = _controller.index;
-      });
-      print("Selected Index: " + _controller.index.toString());
-    });;
-    amplifyState.configureAmplify(context, amplifyState, this);
-  }
-
-  void setUserState() {
-    setState(() {
-      bool test = amplifyState.getLoggedIn();
-      debugPrint("in set user state, logged in: $test");
-      if (amplifyState.getLoggedIn()) {
-        userButton = "Sign Out";
-      } else {
-        userButton = "Sign In";
-      }
+      setState(() {});
+      debugPrint("Selected Index: " + _controller.index.toString());
     });
+    amplifyState.configureAmplify(context, amplifyState, this);
+    // amplifyState.clearLocalDataStore();
   }
 
+  Widget _buildRow(Location curLocation) {
+    return Card(
+        child: ListTile(
+            leading: const Icon(Icons.wine_bar, color: Colors.black, size: 50),
+            title: Text(
+              curLocation.BarName.toString(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            subtitle: Text(curLocation.Region.toString()),
+            trailing: const Icon(Icons.add_location_alt_sharp,
+                color: Colors.orange, size: 40),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => LocationPage(
+                            location: curLocation,
+                            amplifyState: amplifyState,
+                          )));
+            }));
+  }
 
-    Widget _buildRow(Location curLocation) {
-      return Card(
-          child: ListTile(
-              leading: Icon(Icons.wine_bar, color: Colors.black, size: 50),
-              title: Text(
-                curLocation.BarName.toString(),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+  Widget _buildRowNew(Location curLocation) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        InkWell(
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                  color: Color(0xFFC8CED5),
+                  width: 1,
+                ),
               ),
-              subtitle: Text(curLocation.Region.toString()),
-              trailing: Icon(Icons.add_location_alt_sharp,
-                  color: Colors.orange, size: 40),
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            LocationPage(location: curLocation, amplifyState: amplifyState,)));
-              }));
-    }
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(8, 0, 8, 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.wine_bar,
+                          color: Colors.black,
+                          size: 40,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Text(
+                              curLocation.BarName,
+                              style: TextStyle(
+                                fontFamily: 'Lexend Deca',
+                                color: Color(0xFF15212B),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding:
+                                    EdgeInsetsDirectional.fromSTEB(0, 4, 4, 0),
+                                child: Text(
+                                  curLocation.Region,
+                                  style: TextStyle(
+                                    fontFamily: 'Lexend Deca',
+                                    color: Color(0xFF4B39EF),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: Color(0xFF82878C),
+                          size: 24,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => LocationPage(
+                            location: curLocation,
+                            amplifyState: amplifyState,
+                          )));
+            }),
+      ],
+    );
+  }
 
   Widget _buildLocations() {
     Future<List<Location>> locations = amplifyState.getAllLocations();
@@ -127,11 +224,14 @@ class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderSt
         future: locations,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           } else if (snapshot.hasData) {
-            print(snapshot.data.toString());
+            if (snapshot.data!.isEmpty) {
+              return const Text('None');
+            }
+            debugPrint(snapshot.data.toString());
             return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                // padding: const EdgeInsets.all(16),
                 itemCount: (snapshot.data!.length * 2),
                 itemBuilder: (context, i) {
                   if (i.isOdd) {
@@ -139,38 +239,13 @@ class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderSt
                   }
 
                   final index = i ~/ 2;
-                  return _buildRow(snapshot.data![index]);
+                  return _buildRowNew(snapshot.data![index]);
                 });
           } else {
-            return Container(
-              child: Text('Loading'),
-            );
+            return const Text('Loading');
           }
         });
   }
-
-  // Widget _buildRow(Location curLocation) {
-  //   return Card(
-  //       child: ListTile(
-  //           leading: Icon(Icons.wine_bar, color: Colors.black, size: 50),
-  //           title: Text(
-  //             curLocation.BarName.toString(),
-  //             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-  //           ),
-  //           subtitle: Text(curLocation.Region.toString()),
-  //           trailing: Icon(Icons.add_location_alt_sharp,
-  //               color: Colors.orange, size: 40),
-  //           onTap: () {
-  //             Navigator.push(
-  //                 context,
-  //                 MaterialPageRoute(
-  //                     builder: (context) => LocationPage(
-  //                           location: curLocation,
-  //                           amplifyState: amplifyState,
-  //                         )));
-  //           }));
-  // }
-
 
   @override
   Widget build(BuildContext context) {
@@ -182,48 +257,38 @@ class MyHomePageState extends State<DashboardScreen> with SingleTickerProviderSt
     // than having to individually change instances of widgets.
     return MaterialApp(
         home: Scaffold(
-                appBar: AppBar(
-                  bottom: TabBar(
-                    onTap: (index) {
-
-                    },
-                    controller: _controller,
-                    tabs: list,
-                  ),
-
-                  // Here we take the value from the MyHomePage object that was created by
-                  // the App.build method, and use it to set our appbar title.
-                  title: Text(widget.title),
-                  actions: <Widget>[
-                    Padding(
-                        padding: const EdgeInsets.only(right: 20.0),
-                        child: GestureDetector(
-                            onTap: () {
-                              if (amplifyState.getLoggedIn()) {
-                                amplifyState.signOut();
-                              } else {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => LoginScreen(
-                                            key: null,
-                                            amplifyState: amplifyState)));
-                              }
-                            },
-                            child: Text(userButton)))
-                  ],
-                ),
-                // bottomNavigationBar: menu(),
-
-                body: TabBarView(
+            appBar: AppBar(
+                bottom: TabBar(
+                  onTap: (index) {},
                   controller: _controller,
-                  children: [
-                    _buildLocations(),
-                    MatchPage(amplifyState: amplifyState),
-                    const MessagingPage(),
-                    ProfilePage(amplifyState: amplifyState)
-                  ]
-                )));
+                  tabs: list,
+                ),
 
+                // Here we take the value from the MyHomePage object that was created by
+                // the App.build method, and use it to set our appbar title.
+                title: Text(widget.title),
+                actions: [
+                  TextButton(
+                      style: TextButton.styleFrom(
+                        primary: Colors.white,
+                      ),
+                      onPressed: () {
+                        amplifyState.signOut();
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => LoginScreen(
+                                    key: null, amplifyState: amplifyState)));
+                      },
+                      child: const Text("Sign Out"))
+                ]),
+            // bottomNavigationBar: menu(),
+
+            body: TabBarView(controller: _controller, children: [
+              _buildLocations(),
+              MatchPage(amplifyState: amplifyState),
+              const MessagingPage(),
+              ProfilePage(amplifyState: amplifyState)
+            ])));
   }
 }

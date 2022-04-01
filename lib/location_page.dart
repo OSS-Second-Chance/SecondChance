@@ -14,42 +14,41 @@ class LocationPage extends StatefulWidget {
   final AmplifyState amplifyState;
 
   @override
-  State<StatefulWidget> createState() {
+  _LocationState createState() {
     return _LocationState(this.location, this.amplifyState);
   }
 }
 
 class _LocationState extends State<LocationPage> {
-
   final Location location;
   final AmplifyState amplifyState;
   _LocationState(this.location, this.amplifyState);
 
   @override
   Widget build(BuildContext context) {
-    return
-            Scaffold(
-                appBar: AppBar(
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  title: Text(location.BarName.toString()),
-                ),
-                // bottomNavigationBar: menu(),
-                body: _buildLocation());
-
+    return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(location.BarName.toString()),
+        ),
+        // bottomNavigationBar: menu(),
+        body: _buildLocation());
   }
 
-
   Widget _buildLocation() {
-    Future<List<UserModel>> allUsers = amplifyState.getAllUsers();
+    Future<List<UserModel>> allUsers = amplifyState.getAllUsersNM();
     return FutureBuilder<List<UserModel>>(
         future: allUsers,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return CircularProgressIndicator();
           } else if (snapshot.hasData) {
+            if (snapshot.data!.isEmpty) {
+              return Text('None');
+            }
             print(snapshot.data.toString());
             return ListView.builder(
                 padding: const EdgeInsets.all(16),
@@ -74,24 +73,24 @@ class _LocationState extends State<LocationPage> {
     Future<String> userProfilePicUrl;
     userProfilePicUrl = amplifyState.getUserProfilePicture(user);
     return FutureBuilder(
-      future: userProfilePicUrl,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return ClipOval(
-            child: Material(
-              color: Colors.transparent,
-              child: Ink.image(
-                image: NetworkImage(snapshot.data!.toString()),
-                fit: BoxFit.cover,
-                width:  50,
-                height: 50,
-                child: InkWell(),
+        future: userProfilePicUrl,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return ClipOval(
+              child: Material(
+                color: Colors.transparent,
+                child: Ink.image(
+                  image: NetworkImage(snapshot.data!.toString()),
+                  fit: BoxFit.cover,
+                  width: 50,
+                  height: 50,
+                  child: InkWell(),
+                ),
               ),
-            ),
-          );
-        }
-        return const Icon(Icons.person, color: Colors.black, size: 50);
-  });
+            );
+          }
+          return const Icon(Icons.person, color: Colors.black, size: 50);
+        });
   }
 
   Widget _buildRow(BuildContext context, UserModel thisUser) {
@@ -111,6 +110,7 @@ class _LocationState extends State<LocationPage> {
                   MaterialPageRoute(
                       builder: (context) => ViewProfilePage(
                             viewUser: thisUser,
+                            // location: location,
                             amplifyState: amplifyState,
                           )));
             }));

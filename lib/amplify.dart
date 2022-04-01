@@ -19,16 +19,13 @@ class AmplifyState {
   bool isAmplifyConfigured = false;
   bool loggedIn = false;
   final picker = ImagePicker();
-  late var profilePicture;
+  late NetworkImage profilePicture;
   late String? name;
   late String? email;
   late String? gender;
   late String? birthdate;
   late String? number;
   late MyHomePageState homePageState;
-  // final AmplifyDataStore _amplifyDataStore = AmplifyDataStore(
-  //   modelProvider: ModelProvider.instance,
-  // );
 
   void configureAmplify(BuildContext context, AmplifyState amplifyState,
       MyHomePageState myHomePageState) async {
@@ -52,17 +49,15 @@ class AmplifyState {
       try {
         if (isAmplifyConfigured) {
           debugPrint("in verifyLogin: Amplify is configured");
-          final awsUser = await Amplify.Auth.getCurrentUser();
+          await Amplify.Auth.getCurrentUser();
           loggedIn = true;
           getDownloadUrl().then((result) {
             profilePicture = NetworkImage(result);
           });
-          homePageState.setUserState();
           return;
         }
       } on SignedOutException {
         loggedIn = false;
-        homePageState.setUserState();
         Navigator.push(
             context,
             MaterialPageRoute(
@@ -71,7 +66,7 @@ class AmplifyState {
         return;
       }
     } on AmplifyAlreadyConfiguredException {
-      print(
+      debugPrint(
           "Tried to reconfigure Amplify; this can occur when your app restarts on Android.");
     }
   }
@@ -82,7 +77,7 @@ class AmplifyState {
         CognitoUserAttributeKey.name: name,
       };
 
-      SignUpResult result = await Amplify.Auth.signUp(
+      await Amplify.Auth.signUp(
           username: email,
           password: password,
           options: CognitoSignUpOptions(userAttributes: userInfo));
@@ -95,9 +90,44 @@ class AmplifyState {
     }
   }
 
+  Future<String> resendSignUp(String email) async {
+    try {
+      await Amplify.Auth.resendSignUpCode(username: email);
+      return "SuccessfulResendSignup";
+    } on AuthException catch (e) {
+      debugPrint("In AuthException for resendSignUp");
+      debugPrint(e.message);
+      return e.message;
+    }
+  }
+
+  Future<String> resetPassword(String email) async {
+    try {
+      await Amplify.Auth.resetPassword(username: email);
+      return "SuccessfulCodeSend";
+    } on AuthException catch (e) {
+      debugPrint("In AuthException for resetPassword");
+      debugPrint(e.message);
+      return e.message;
+    }
+  }
+
+  Future<String> resetPasswordConfirm(
+      String email, String code, String password) async {
+    try {
+      await Amplify.Auth.confirmResetPassword(
+          username: email, newPassword: password, confirmationCode: code);
+      return "SuccessfulPasswordReset";
+    } on AuthException catch (e) {
+      debugPrint("In AuthException for resetPasswordConfirm");
+      debugPrint(e.message);
+      return e.message;
+    }
+  }
+
   Future<String> loginUser(String email, String password) async {
     try {
-      SignInResult result = await Amplify.Auth.signIn(
+      await Amplify.Auth.signIn(
         username: email,
         password: password,
       );
@@ -106,20 +136,18 @@ class AmplifyState {
       getDownloadUrl().then((result) {
         profilePicture = NetworkImage(result);
       });
-      homePageState.setUserState();
       return "SuccessfulLogin";
     } on AuthException catch (e) {
       debugPrint("In AuthException for loginUser");
       debugPrint(e.message);
       loggedIn = false;
-      homePageState.setUserState();
       return e.message;
     }
   }
 
   Future<String> confirmSignUp(String email, String confirmation) async {
     try {
-      SignUpResult result = await Amplify.Auth.confirmSignUp(
+      await Amplify.Auth.confirmSignUp(
         username: email,
         confirmationCode: confirmation,
       );
@@ -136,7 +164,6 @@ class AmplifyState {
     try {
       await Amplify.Auth.signOut();
       loggedIn = false;
-      homePageState.setUserState();
     } on AuthException catch (e) {
       debugPrint(e.message);
     }
@@ -153,26 +180,42 @@ class AmplifyState {
 
       return (allUsers);
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<List<UserModel>> getAllUsersNM() async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+      List<UserModel> allUsers = await Amplify.DataStore.query(
+          UserModel.classType,
+          where: UserModel.AUTHUSERNAME.ne(activeID));
+
+      return (allUsers);
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
   Future<String> _fetchSession() async {
-      AuthSession res = await Amplify.Auth.fetchAuthSession(
-        options: CognitoSessionOptions(getAWSCredentials: true),
-      );
-      String identityId = (res as CognitoAuthSession).identityId!;
-      return identityId;
+    AuthSession res = await Amplify.Auth.fetchAuthSession(
+      options: CognitoSessionOptions(getAWSCredentials: true),
+    );
+    String identityId = (res as CognitoAuthSession).identityId!;
+    return identityId;
   }
 
   void createUser() async {
-    // debugPrint("Creating User");
     AuthUser? curUser;
-    String? CognitoIdentityId;
+    String? cognitoIdentityId;
     try {
       curUser = await Amplify.Auth.getCurrentUser();
-      CognitoIdentityId = await _fetchSession();
+      cognitoIdentityId = await _fetchSession();
       debugPrint("ASGDHRJYJHGREFWGRH");
       debugPrint(curUser.username);
       debugPrint("ASGDHRJYJHGREFWGRH");
@@ -183,7 +226,7 @@ class AmplifyState {
     final currentUser = UserModel(
         id: curUser?.userId,
         AuthUsername: curUser?.userId,
-        CognitoIdentityId: CognitoIdentityId,
+        CognitoIdentityId: cognitoIdentityId,
         Name: name,
         Gender: gender,
         Email: email,
@@ -193,19 +236,10 @@ class AmplifyState {
     try {
       await Amplify.DataStore.save(currentUser);
 
-      print('Saved ${currentUser.toString()}');
+      debugPrint('Saved ${currentUser.toString()}');
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
-
-    //Test EditProfile Functionality
-    // readAll();
-    // final userProfile = getUserProfile();
-    // updateProfileAttribute('Gender', 'Male');
-    // debugPrint("Get User profile XXXXXX");
-    // final userProfile2 = getUserProfile();
-    // clearLocalDataStore();
-    // debugPrint("Get User profile");
   }
 
   //Test to read entire User List, ignore in production
@@ -218,7 +252,7 @@ class AmplifyState {
       debugPrint(allUsers.toString());
       debugPrint("----");
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -231,7 +265,7 @@ class AmplifyState {
       debugPrint(locations.toString());
       debugPrint("----");
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -242,8 +276,20 @@ class AmplifyState {
 
       return (locations);
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<Location> getFirstLocation() async {
+    try {
+      List<Location> locations =
+          await Amplify.DataStore.query(Location.classType);
+
+      return (locations.first);
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -267,8 +313,27 @@ class AmplifyState {
 
       return activeUser;
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<UserModel> getUserfromID(String? userID) async {
+    try {
+      final theseUsers = await Amplify.DataStore.query(UserModel.classType,
+          where: UserModel.AUTHUSERNAME.eq(userID));
+
+      if (theseUsers.isEmpty) {
+        debugPrint("No objects with ID: $userID");
+        // return null;
+      }
+
+      final thisUser = theseUsers.first;
+
+      return thisUser;
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -294,9 +359,9 @@ class AmplifyState {
 
       await Amplify.DataStore.save(updatedUser);
 
-      print('Updated user profile to ${updatedUser.toString()}');
+      debugPrint('Updated user profile to ${updatedUser.toString()}');
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -306,10 +371,10 @@ class AmplifyState {
 
       await Amplify.DataStore.delete(userToBeDeleted);
 
-      print('Deleted user with Name: ${userToBeDeleted.Name}');
-      print('Deleted user with ID: ${userToBeDeleted.id}');
+      debugPrint('Deleted user with Name: ${userToBeDeleted.Name}');
+      debugPrint('Deleted user with ID: ${userToBeDeleted.id}');
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -326,14 +391,45 @@ class AmplifyState {
               .and(isUser));
 
       if (myMatches.isEmpty) {
-        debugPrint("You got no matches: ${activeID}");
+        debugPrint("You got no matches: $activeID");
         // return null;
       }
 
       return myMatches;
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<List<UserModel>> getMyMatchesUsers() async {
+    try {
+      List<UserModel> matchUsers = [];
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final isUser = Match.USER1ID.eq(activeID).or(Match.USER2ID.eq(activeID));
+      final myMatches = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER1CHECK
+              .eq(true)
+              .and(Match.USER2CHECK.eq(true))
+              .and(isUser));
+
+      if (myMatches.isEmpty) {
+        debugPrint("You got no matches: $activeID");
+        return matchUsers;
+      }
+      for (var element in myMatches) {
+        if (element.User1ID != activeID) {
+          getUserfromID(element.User1ID).then((value) => matchUsers.add(value));
+        } else if (element.User2ID != activeID) {
+          getUserfromID(element.User2ID).then((value) => matchUsers.add(value));
+        }
+      }
+      return matchUsers;
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -349,14 +445,46 @@ class AmplifyState {
           where: Match.USER1CHECK.eq(true).and(user2Null));
 
       if (myAdmirers.isEmpty) {
-        debugPrint("You got no matches: ${activeID}");
+        debugPrint("You got no matches: $activeID");
         // return null;
       }
 
       return myAdmirers;
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<List<UserModel>> getMyAdmirersUsers() async {
+    try {
+      List<UserModel> admirerUsers = [];
+      AuthUser? curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+      final user2Null =
+          Match.USER2ID.eq(activeID).and(Match.USER2CHECK.eq(null));
+
+      final myAdmirers = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER1CHECK.eq(true).and(user2Null));
+
+      if (myAdmirers.isEmpty) {
+        debugPrint("You got no matches: $activeID");
+        // return null;
+      }
+      for (var element in myAdmirers) {
+        if (element.User1ID != activeID) {
+          getUserfromID(element.User1ID)
+              .then((value) => admirerUsers.add(value));
+        } else if (element.User2ID != activeID) {
+          getUserfromID(element.User2ID)
+              .then((value) => admirerUsers.add(value));
+        }
+      }
+      return admirerUsers;
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -372,14 +500,46 @@ class AmplifyState {
           where: Match.USER2CHECK.eq(null).and(user1True));
 
       if (myRequests.isEmpty) {
-        debugPrint("You got no matches: ${activeID}");
+        debugPrint("You got no matches: $activeID");
         // return null;
       }
 
       return myRequests;
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<List<UserModel>> getMyRequestsUsers() async {
+    try {
+      List<UserModel> requestUsers = [];
+      AuthUser? curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+      final user1True =
+          Match.USER1ID.eq(activeID).and(Match.USER1CHECK.eq(true));
+
+      final myRequests = await Amplify.DataStore.query(Match.classType,
+          where: Match.USER2CHECK.eq(null).and(user1True));
+
+      if (myRequests.isEmpty) {
+        debugPrint("You got no matches: $activeID");
+        // return null;
+      }
+      for (var element in myRequests) {
+        if (element.User1ID != activeID) {
+          getUserfromID(element.User1ID)
+              .then((value) => requestUsers.add(value));
+        } else if (element.User2ID != activeID) {
+          getUserfromID(element.User2ID)
+              .then((value) => requestUsers.add(value));
+        }
+      }
+      return requestUsers;
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -389,9 +549,9 @@ class AmplifyState {
 
       updatedMatch = curMatch.copyWith(User2Check: true);
       await Amplify.DataStore.save(updatedMatch);
-      print('Approved Match');
+      debugPrint('Approved Match');
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -401,9 +561,9 @@ class AmplifyState {
 
       updatedMatch = curMatch.copyWith(User2Check: false);
       await Amplify.DataStore.save(updatedMatch);
-      print('Declined Match');
+      debugPrint('Declined Match');
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -413,9 +573,9 @@ class AmplifyState {
 
       updatedMatch = curMatch.copyWith(User1Check: false);
       await Amplify.DataStore.save(updatedMatch);
-      print('Declined Match');
+      debugPrint('Declined Match');
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -425,10 +585,10 @@ class AmplifyState {
 
       await Amplify.DataStore.delete(matchToBeDeleted);
 
-      // print('Deleted match with Name: ${matchToBeDeleted.User1Name}');
-      // print('Deleted match with Name: ${matchToBeDeleted.User2Name}');
+      // debugPrint('Deleted match with Name: ${matchToBeDeleted.User1Name}');
+      // debugPrint('Deleted match with Name: ${matchToBeDeleted.User2Name}');
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -453,15 +613,16 @@ class AmplifyState {
           User1Check: true,
           User2Name: viewUser.Name,
           User2ID: viewUser.AuthUsername,
+          // Location: location.id,
           // User2Check: true,
         );
 
         try {
           Amplify.DataStore.save(newMatch);
-          print(
+          debugPrint(
               'New Match between ${newMatch.User1Name} and ${newMatch.User2Name}');
         } catch (e) {
-          print(e);
+          debugPrint(e.toString());
         }
       });
     });
@@ -488,8 +649,8 @@ class AmplifyState {
       }
       return true;
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -513,8 +674,48 @@ class AmplifyState {
       }
       return myMatches.first;
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  void deleteMatches(UserModel viewUser) async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+      final isUserA = Match.USER1ID
+          .eq(activeID)
+          .and(Match.USER2ID.eq(viewUser.AuthUsername));
+      final isUserB = Match.USER1ID
+          .eq(viewUser.AuthUsername)
+          .and(Match.USER2ID.eq(activeID));
+
+      final both = isUserA.or(isUserB);
+      final myMatches =
+          await Amplify.DataStore.query(Match.classType, where: both);
+      if (myMatches.isEmpty) {
+        debugPrint("No Matches");
+        return;
+      }
+
+      for (var element in myMatches) {
+        debugPrint('Matches to Delete XXX');
+        debugPrint(element.User1Name);
+        debugPrint(element.User2Name);
+        try {
+          await Amplify.DataStore.delete(element,
+              where: Match.USER1ID
+                  .eq(element.User1ID)
+                  .and(Match.USER2ID.eq(element.User2ID)));
+          debugPrint('Deleted a match');
+        } on DataStoreException catch (e) {
+          debugPrint('Delete failed: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -564,8 +765,8 @@ class AmplifyState {
 
       return ("Temp Case");
     } catch (e) {
-      print(e);
-      throw e;
+      debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -574,7 +775,7 @@ class AmplifyState {
       debugPrint("WARNING: Clearing DB");
       await Amplify.DataStore.clear();
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     }
   }
 
@@ -584,28 +785,26 @@ class AmplifyState {
 
     var imageGet = await http.get(imageUri);
     Directory imageDir = await getApplicationDocumentsDirectory();
-    File image = new File(join(imageDir.path, "defaultProfile.png"));
+    File image = File(join(imageDir.path, "defaultProfile.png"));
     image.writeAsBytes(imageGet.bodyBytes).then((result) async {
-
       final uploadOptions = S3UploadFileOptions(
         accessLevel: StorageAccessLevel.protected,
       );
       // Upload image with the current time as the key
-      final key = "profilePicture";
+      const key = "profilePicture";
       final file = File(image.path);
       try {
-        final UploadFileResult result =
-            await Amplify.Storage.uploadFile(
+        final UploadFileResult result = await Amplify.Storage.uploadFile(
             options: uploadOptions,
             local: file,
             key: key,
             onProgress: (progress) {
-              print("Fraction completed: " + progress.getFractionCompleted().toString());
-            }
-        );
-        print('Successfully uploaded image: ${result.key}');
+              debugPrint("Fraction completed: " +
+                  progress.getFractionCompleted().toString());
+            });
+        debugPrint('Successfully uploaded image: ${result.key}');
       } on StorageException catch (e) {
-        print('Error uploading image: $e');
+        debugPrint('Error uploading image: $e');
       }
     });
   }
@@ -613,67 +812,60 @@ class AmplifyState {
   Future<void> uploadImage(ProfilePageState state) async {
     // Select image from user's gallery
     final XFile? pickedFile =
-    await picker.pickImage(source: ImageSource.gallery);
+        await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile == null) {
-      print('No image selected');
+      debugPrint('No image selected');
       return;
     }
     final uploadOptions = S3UploadFileOptions(
       accessLevel: StorageAccessLevel.protected,
     );
     // Upload image with the current time as the key
-    final key = "profilePicture";
+    const key = "profilePicture";
     final file = File(pickedFile.path);
     try {
-      final UploadFileResult result =
-      await Amplify.Storage.uploadFile(
+      final UploadFileResult result = await Amplify.Storage.uploadFile(
           options: uploadOptions,
           local: file,
           key: key,
           onProgress: (progress) {
-            print("Fraction completed: " + progress.getFractionCompleted().toString());
-          }
-      );
-      print('Successfully uploaded image: ${result.key}');
-      getDownloadUrl().then( (_) {
+            debugPrint("Fraction completed: " +
+                progress.getFractionCompleted().toString());
+          });
+      debugPrint('Successfully uploaded image: ${result.key}');
+      getDownloadUrl().then((_) {
         state.newProfileImage();
       });
     } on StorageException catch (e) {
-      print('Error uploading image: $e');
+      debugPrint('Error uploading image: $e');
     }
   }
 
   Future<String> getUserProfilePicture(UserModel user) async {
-      final uploadOptions = S3GetUrlOptions(
-          accessLevel: StorageAccessLevel.protected,
-          targetIdentityId: user.CognitoIdentityId
-      );
+    final uploadOptions = S3GetUrlOptions(
+        accessLevel: StorageAccessLevel.protected,
+        targetIdentityId: user.CognitoIdentityId);
 
-
-      return Amplify.Storage.getUrl(key: 'profilePicture',
-          options: uploadOptions).then((result) {
-        return result.url;
-      });
-
+    return Amplify.Storage.getUrl(key: 'profilePicture', options: uploadOptions)
+        .then((result) {
+      return result.url;
+    });
   }
-
 
   Future<String> getDownloadUrl() async {
     try {
       final uploadOptions = S3GetUrlOptions(
         accessLevel: StorageAccessLevel.protected,
       );
-      final GetUrlResult result =
-      await Amplify.Storage.getUrl(key: 'profilePicture',
-      options: uploadOptions);
+      final GetUrlResult result = await Amplify.Storage.getUrl(
+          key: 'profilePicture', options: uploadOptions);
       profilePicture = NetworkImage(result.url);
       return result.url;
       // NOTE: This code is only for demonstration
-      // Your debug console may truncate the printed url string
-      print('Got URL: ${result.url}');
+      // Your debug console may truncate the debugPrint(e.toString())d url string
     } on StorageException catch (e) {
-      print('Error getting download URL: $e');
+      debugPrint('Error getting download URL: $e');
       return '';
     }
   }
