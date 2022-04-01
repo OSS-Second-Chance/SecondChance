@@ -85,13 +85,12 @@ class MyHomePageState extends State<DashboardScreen>
     _controller = TabController(length: list.length, vsync: this);
 
     _controller.addListener(() {
-      setState(() {
-      });
+      setState(() {});
       debugPrint("Selected Index: " + _controller.index.toString());
     });
     amplifyState.configureAmplify(context, amplifyState, this);
+    // amplifyState.clearLocalDataStore();
   }
-
 
   Widget _buildRow(Location curLocation) {
     return Card(
@@ -109,9 +108,9 @@ class MyHomePageState extends State<DashboardScreen>
                   context,
                   MaterialPageRoute(
                       builder: (context) => LocationPage(
-                        location: curLocation,
-                        amplifyState: amplifyState,
-                      )));
+                            location: curLocation,
+                            amplifyState: amplifyState,
+                          )));
             }));
   }
 
@@ -248,7 +247,6 @@ class MyHomePageState extends State<DashboardScreen>
         });
   }
 
-
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -270,23 +268,19 @@ class MyHomePageState extends State<DashboardScreen>
                 // the App.build method, and use it to set our appbar title.
                 title: Text(widget.title),
                 actions: [
-                    TextButton(
-                        style: TextButton.styleFrom(
-                          primary: Colors.white,
-                        ),
-                        onPressed: () {
-
-                          amplifyState.signOut();
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => LoginScreen(
-                                      key: null,
-                                      amplifyState: amplifyState)));
-                        },
-                        child: const Text("Sign Out")
-                    )
-
+                  TextButton(
+                      style: TextButton.styleFrom(
+                        primary: Colors.white,
+                      ),
+                      onPressed: () {
+                        amplifyState.signOut();
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => LoginScreen(
+                                    key: null, amplifyState: amplifyState)));
+                      },
+                      child: const Text("Sign Out"))
                 ]),
             // bottomNavigationBar: menu(),
 

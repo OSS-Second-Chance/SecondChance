@@ -92,7 +92,6 @@ class AmplifyState {
 
   Future<String> resendSignUp(String email) async {
     try {
-
       await Amplify.Auth.resendSignUpCode(username: email);
       return "SuccessfulResendSignup";
     } on AuthException catch (e) {
@@ -104,10 +103,8 @@ class AmplifyState {
 
   Future<String> resetPassword(String email) async {
     try {
-
       await Amplify.Auth.resetPassword(username: email);
       return "SuccessfulCodeSend";
-
     } on AuthException catch (e) {
       debugPrint("In AuthException for resetPassword");
       debugPrint(e.message);
@@ -115,14 +112,12 @@ class AmplifyState {
     }
   }
 
-  Future<String> resetPasswordConfirm(String email, String code, String password) async {
+  Future<String> resetPasswordConfirm(
+      String email, String code, String password) async {
     try {
-
-      await Amplify.Auth.confirmResetPassword(username: email,
-          newPassword: password,
-          confirmationCode: code);
+      await Amplify.Auth.confirmResetPassword(
+          username: email, newPassword: password, confirmationCode: code);
       return "SuccessfulPasswordReset";
-
     } on AuthException catch (e) {
       debugPrint("In AuthException for resetPasswordConfirm");
       debugPrint(e.message);
@@ -280,6 +275,18 @@ class AmplifyState {
           await Amplify.DataStore.query(Location.classType);
 
       return (locations);
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<Location> getFirstLocation() async {
+    try {
+      List<Location> locations =
+          await Amplify.DataStore.query(Location.classType);
+
+      return (locations.first);
     } catch (e) {
       debugPrint(e.toString());
       rethrow;
@@ -585,7 +592,7 @@ class AmplifyState {
     }
   }
 
-  void createMatch(UserModel viewUser, Location location) async {
+  void createMatch(UserModel viewUser) async {
     getUserProfile().then((curUser) {
       debugPrint('HERE XXXXX');
       debugPrint(curUser.Name.toString());
@@ -606,7 +613,7 @@ class AmplifyState {
           User1Check: true,
           User2Name: viewUser.Name,
           User2ID: viewUser.AuthUsername,
-          Location: location.id,
+          // Location: location.id,
           // User2Check: true,
         );
 
@@ -801,7 +808,6 @@ class AmplifyState {
       }
     });
   }
-
 
   Future<void> uploadImage(ProfilePageState state) async {
     // Select image from user's gallery
