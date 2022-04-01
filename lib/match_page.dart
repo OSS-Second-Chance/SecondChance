@@ -9,6 +9,7 @@ import 'messaging_page.dart';
 
 import 'amplify.dart';
 import 'view_profile_page.dart';
+import 'models/Location.dart';
 
 class MatchPage extends StatefulWidget {
   const MatchPage({Key? key, required this.amplifyState}) : super(key: key);
@@ -28,6 +29,7 @@ class _MatchPage extends State<MatchPage> {
   late Future<List<UserModel>> myMatches;
   late Future<List<UserModel>> myAdmirers;
   late Future<List<UserModel>> myRequests;
+  late Location _location;
 
   @override
   initState() {
@@ -42,6 +44,7 @@ class _MatchPage extends State<MatchPage> {
     // Future<List<Match>> myMatches = amplifyState.getMyMatches();
 
     Color _color = Theme.of(context).primaryColor;
+    amplifyState.getFirstLocation().then((_location) => null);
 
     return Scaffold(
       // bottomNavigationBar: menu(),
@@ -169,37 +172,52 @@ class _MatchPage extends State<MatchPage> {
                                   return Container(
                                     width: 100,
                                     height: 100,
-                                    child: Stack(
-                                      children: [
-                                        Align(
-                                          alignment: AlignmentDirectional(0, 0),
-                                          child: Container(
-                                            width: 90,
-                                            height: 90,
-                                            clipBehavior: Clip.antiAlias,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
+                                    child: new InkWell(
+                                      onTap: () {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ViewProfilePage(
+                                                      viewUser: viewUser,
+                                                      // location: _location,
+                                                      amplifyState:
+                                                          amplifyState,
+                                                    )));
+                                      },
+                                      child: Stack(
+                                        children: [
+                                          Align(
+                                            alignment:
+                                                AlignmentDirectional(0, 0),
+                                            child: Container(
+                                              width: 90,
+                                              height: 90,
+                                              clipBehavior: Clip.antiAlias,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: buildImage(viewUser),
                                             ),
-                                            child: buildImage(viewUser),
                                           ),
-                                        ),
-                                        Align(
-                                          alignment:
-                                              AlignmentDirectional(0, 1.31),
-                                          child: Text(
-                                            viewUser.Name.toString()
-                                            // +'\n' +viewUser.Gender.toString()
-                                            ,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontFamily: 'Lato',
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold,
+                                          Align(
+                                            alignment:
+                                                AlignmentDirectional(0, 1.31),
+                                            child: Text(
+                                              viewUser.Name.toString()
+                                              // +'\n' +viewUser.Gender.toString()
+                                              ,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontFamily: 'Lato',
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   );
                                 }),
