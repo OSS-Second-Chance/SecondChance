@@ -63,6 +63,12 @@ class MyHomePageState extends State<DashboardScreen>
   int counter = 0;
   AmplifyState amplifyState = AmplifyState();
   String userButton = "Sign Out";
+
+  String AppStage = "Profile";
+  late Widget AppState;
+  // String dropDownValue;
+  // TextEditingController textController;
+
   // var locationList = <Location>[].obs;
 
   late TabController _controller;
@@ -109,6 +115,110 @@ class MyHomePageState extends State<DashboardScreen>
             }));
   }
 
+  Widget _buildRowNew(Location curLocation) {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        InkWell(
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(
+                  color: Color(0xFFC8CED5),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(8, 0, 8, 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.wine_bar,
+                          color: Colors.black,
+                          size: 40,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Text(
+                              curLocation.BarName,
+                              style: TextStyle(
+                                fontFamily: 'Lexend Deca',
+                                color: Color(0xFF15212B),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding:
+                                    EdgeInsetsDirectional.fromSTEB(0, 4, 4, 0),
+                                child: Text(
+                                  curLocation.Region,
+                                  style: TextStyle(
+                                    fontFamily: 'Lexend Deca',
+                                    color: Color(0xFF4B39EF),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: Color(0xFF82878C),
+                          size: 24,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => LocationPage(
+                            location: curLocation,
+                            amplifyState: amplifyState,
+                          )));
+            }),
+      ],
+    );
+  }
+
   Widget _buildLocations() {
     Future<List<Location>> locations = amplifyState.getAllLocations();
     return FutureBuilder<List<Location>>(
@@ -122,7 +232,7 @@ class MyHomePageState extends State<DashboardScreen>
             }
             debugPrint(snapshot.data.toString());
             return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                // padding: const EdgeInsets.all(16),
                 itemCount: (snapshot.data!.length * 2),
                 itemBuilder: (context, i) {
                   if (i.isOdd) {
@@ -130,7 +240,7 @@ class MyHomePageState extends State<DashboardScreen>
                   }
 
                   final index = i ~/ 2;
-                  return _buildRow(snapshot.data![index]);
+                  return _buildRowNew(snapshot.data![index]);
                 });
           } else {
             return const Text('Loading');

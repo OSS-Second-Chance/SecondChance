@@ -110,6 +110,7 @@ class _LocationState extends State<LocationPage> {
                   MaterialPageRoute(
                       builder: (context) => ViewProfilePage(
                             viewUser: thisUser,
+                            location: location,
                             amplifyState: amplifyState,
                           )));
             }));
