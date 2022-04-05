@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'edit_my_profile_page.dart';
 
 class AmplifyState {
   bool isAmplifyConfigured = false;
@@ -809,7 +810,7 @@ class AmplifyState {
     });
   }
 
-  Future<void> uploadImage(ProfilePageState state) async {
+  Future<void> uploadImage(EditMyProfilePageState state) async {
     // Select image from user's gallery
     final XFile? pickedFile =
         await picker.pickImage(source: ImageSource.gallery);

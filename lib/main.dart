@@ -247,6 +247,22 @@ class MyHomePageState extends State<DashboardScreen>
         });
   }
 
+  Widget _buildMyProfilePage() {
+    Future<UserModel> currentUser = amplifyState.getUserProfile();
+    return FutureBuilder<UserModel> (
+      future: currentUser,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasData) {
+          return MyProfilePage(viewUser: snapshot.requireData, amplifyState: amplifyState);
+        } else {
+          return const Text('Loading');
+        }
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -288,7 +304,7 @@ class MyHomePageState extends State<DashboardScreen>
               _buildLocations(),
               MatchPage(amplifyState: amplifyState),
               const MessagingPage(),
-              ProfilePage(amplifyState: amplifyState)
+              _buildMyProfilePage()
             ])));
   }
 }
