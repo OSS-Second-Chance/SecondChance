@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:second_chance/amplify.dart';
+import 'package:second_chance/my_profile_page.dart';
 import 'models/UserModel.dart';
 import 'models/Location.dart';
 import 'amplify.dart';
@@ -39,8 +40,8 @@ class EditMyProfilePageState extends State<EditMyProfilePage> {
   late String name;
   late String gender;
   late String birthday;
-  late String email;
-  late String phoneNumber;
+  late String work;
+  late String school;
   // Here
   @override
   initState() {
@@ -112,6 +113,7 @@ class EditMyProfilePageState extends State<EditMyProfilePage> {
           ),
           const SizedBox(height: 10),
           TextFormField(
+              initialValue: viewUser.Name.toString(),
               decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Name'
@@ -126,6 +128,7 @@ class EditMyProfilePageState extends State<EditMyProfilePage> {
           ),
           const SizedBox(height: 10),
           TextFormField(
+            initialValue: viewUser.Gender.toString(),
             decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Gender'
@@ -140,6 +143,7 @@ class EditMyProfilePageState extends State<EditMyProfilePage> {
           ),
           const SizedBox(height: 10),
           TextFormField(
+            initialValue: viewUser.Birthday.toString(),
             decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Birthday'
@@ -154,29 +158,31 @@ class EditMyProfilePageState extends State<EditMyProfilePage> {
           ),
           const SizedBox(height: 10),
           TextFormField(
+            initialValue: (viewUser.School != null) ? viewUser.School.toString(): "",
             decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Email'
+                labelText: 'School'
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter some text';
               }
-              email = value;
+              school = value;
               return null;
             },
           ),
           const SizedBox(height: 10),
           TextFormField(
+            initialValue: (viewUser.Work != null) ? viewUser.Work.toString() : "",
             decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: 'Phone Number'
+                labelText: 'Work'
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter some text';
               }
-              phoneNumber = value;
+              work = value;
               return null;
             },
           ),
@@ -184,9 +190,7 @@ class EditMyProfilePageState extends State<EditMyProfilePage> {
           ElevatedButton(
             onPressed: () {
               if (_formKey.currentState!.validate()) {
-                amplifyState.updateProfileAttribute('Name', name);
-                amplifyState.updateProfileAttribute('Birthday', birthday);
-                amplifyState.updateProfileAttribute('Gender', gender);
+                amplifyState.updateProfileAttribute(name, birthday, gender, school, work);
                 Navigator.pop(context);
               }
             },

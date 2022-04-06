@@ -36,6 +36,12 @@ class MyProfilePageState extends State<MyProfilePage> {
   String displayText = 'Placeholder Text';
   void action;
   String status = 'ShouldBeChanged';
+  late String name = viewUser.Name.toString();
+  late String gender = viewUser.Gender.toString();
+  late String birthday = viewUser.Birthday.toString();
+  late String school = viewUser.School.toString();
+  late String work = viewUser.Work.toString();
+
   // Here
   @override
   initState() {
@@ -52,10 +58,20 @@ class MyProfilePageState extends State<MyProfilePage> {
     }
   }
 
-  newProfileImage() {
+  refreshPage() {
+    if (!mounted) {
+      debugPrint("Not refreshing");
+      return;
+    }
     setState(() {
+      name = viewUser.Name.toString();
+      gender = viewUser.Gender.toString();
+      birthday = viewUser.Birthday.toString();
+      school = viewUser.School.toString();
+      work = viewUser.Work.toString();
       image = amplifyState.profilePicture;
     });
+    debugPrint("Refreshing");
   }
 
   @override
@@ -70,8 +86,8 @@ class MyProfilePageState extends State<MyProfilePage> {
       const SizedBox(height: 24),
       ProfileWidget(viewUser, context),
       const SizedBox(height: 24),
-      buildName(viewUser.Name.toString()),
-      const SizedBox(height: 36),
+      buildName(name),
+      const SizedBox(height: 24),
       buildAbout(viewUser),
     ]);
   }
@@ -97,25 +113,52 @@ class MyProfilePageState extends State<MyProfilePage> {
         ),
         const SizedBox(height: 10),
         Text(
-          '\u{1F464} ' + viewUser.Name.toString(),
+          '\u{1F464} ' + name,
           style: const TextStyle(fontSize: 20, height: 2.5),
         ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
         Text(
-          '\u{1F46B} ' + viewUser.Gender.toString(),
+          '\u{1F46B} ' + gender,
           style: const TextStyle(fontSize: 20, height: 2.5),
         ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
         Text(
-          '\u{1F382} ' + viewUser.Birthday.toString(),
+          '\u{1F382} ' + birthday,
           style: const TextStyle(fontSize: 20, height: 2.5),
+        ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
+        Visibility(
+          visible: (viewUser.School != null) ? true : false,
+          child: Text(
+            '\u{1F3EB} ' + school,
+            style: const TextStyle(fontSize: 20, height: 2.5),
+          ),
+        ),
+        Visibility(
+          visible: (viewUser.School != null) ? true : false,
+          child: const Divider(height: 1, thickness: 1, color: Colors.black)
+        ),
+        Visibility(
+          visible: (viewUser.Work != null) ? true : false,
+          child: Text(
+            '\u{1F3E2} ' + work,
+            style: const TextStyle(fontSize: 20, height: 2.5),
+          ),
+        ),
+        Visibility(
+          visible: (viewUser.Work != null) ? true : false,
+          child: const Divider(height: 1, thickness: 1, color: Colors.black)
         ),
         Text(
           '\u{1F4E7} ' + viewUser.Email.toString(),
           style: const TextStyle(fontSize: 20, height: 2.5),
         ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
         Text(
           '\u{1F4F1} ' + viewUser.PhoneNumber.toString(),
           style: const TextStyle(fontSize: 20, height: 2.5),
         ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
       ],
     ),
   );
@@ -141,18 +184,20 @@ class MyProfilePageState extends State<MyProfilePage> {
           fit: BoxFit.cover,
           width: 128,
           height: 128,
-          child: InkWell(
-              onTap: () {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => EditMyProfilePage(
-                viewUser: viewUser,
-                // location: location,
-                amplifyState: amplifyState,
-              )));
-          }
-          ),
+          child: InkWell (
+            onTap: () async {
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => EditMyProfilePage(
+                        viewUser: viewUser,
+                        // location: location,
+                        amplifyState: amplifyState,
+                      )));
+            refreshPage();
+            }
+        )
+          //child: InkWell(onTap: onClicked),
         ),
       ),
     );

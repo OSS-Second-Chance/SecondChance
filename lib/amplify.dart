@@ -338,25 +338,12 @@ class AmplifyState {
     }
   }
 
-  void updateProfileAttribute(String attr, String newValue) async {
+  void updateProfileAttribute(String name, String birthday, String gender, String school, String work) async {
     try {
       final userToUpdate = await getUserProfile();
       UserModel updatedUser = userToUpdate;
-      if (attr == 'Name') {
-        updatedUser = userToUpdate.copyWith(Name: newValue);
-      } else if (attr == 'Birthday') {
-        updatedUser = userToUpdate.copyWith(Birthday: newValue);
-      } else if (attr == 'Gender') {
-        updatedUser = userToUpdate.copyWith(Gender: newValue);
-      }
-      // if(attr == 'Age')
-      // {
-      //    userToUpdate.copyWith(Age: newValue);
-      // }
-      // if(attr == 'Email')
-      // {
-      //    userToUpdate.copyWith(Email: newValue);
-      // }
+
+      updatedUser = userToUpdate.copyWith(Name: name, Birthday: birthday, Gender: gender, School: school, Work: work);
 
       await Amplify.DataStore.save(updatedUser);
 
