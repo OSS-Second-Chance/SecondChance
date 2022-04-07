@@ -869,4 +869,80 @@ class AmplifyState {
       return '';
     }
   }
+
+
+  void updateLocation(Location location, String? barUsers) async {
+    try {
+
+      Location newLocation;
+      newLocation = location.copyWith(BarUsers: barUsers);
+
+      await Amplify.DataStore.save(newLocation);
+
+      debugPrint('Updated Location to ${newLocation.toString()}');
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+
+  Future<List<UserModel>> getUsersFromList(List<String> users) async {
+    try {
+      debugPrint("IN GetUsersFromList");
+      debugPrint("User List: ${users}");
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      final activeID = curUser.userId;
+
+        debugPrint("Before rule creation");
+        var c = UserModel.AUTHUSERNAME.eq(users[0]).or(UserModel.AUTHUSERNAME.eq(users[users.length-1])) ;
+        for (var user in users) {
+          if ((user != users[0]) && (user != users[users.length - 1])) {
+            c = c.or(UserModel.AUTHUSERNAME.eq(user));
+          }
+        }
+        c = c.and(UserModel.AUTHUSERNAME.ne(activeID));
+
+        debugPrint("After Rule creation");
+        debugPrint("Created Rule: $c");
+        List<UserModel> allUsers = await Amplify.DataStore.query(
+            UserModel.classType,
+            where: c
+        );
+
+        debugPrint("Exitting GetUsersFromList");
+        return (allUsers);
+
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<Location> refreshLocation(Location location) async {
+    try {
+
+      List<Location> newLocation = await Amplify.DataStore.query(
+          Location.classType,
+          where: Location.BARNAME.eq(location.BarName)
+      );
+
+      return (newLocation[0]);
+
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  Future<AuthUser> getCurrentAuthUser() async {
+    try {
+      AuthUser? curUser;
+      curUser = await Amplify.Auth.getCurrentUser();
+      return curUser;
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
 }
