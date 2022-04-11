@@ -1,105 +1,181 @@
 import 'package:flutter/material.dart';
+import 'package:second_chance/amplify.dart';
+import 'edit_my_profile_page.dart';
+import 'models/UserModel.dart';
+import 'models/Location.dart';
 import 'amplify.dart';
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key, required this.amplifyState}) : super(key: key);
+class MyProfilePage extends StatefulWidget {
+  const MyProfilePage(
+      {Key? key,
+        required this.viewUser,
+        // this.location,
+        required this.amplifyState})
+      : super(key: key);
+
+  final UserModel viewUser;
+  // final Location location;
   final AmplifyState amplifyState;
+
   @override
-  ProfilePageState createState() => ProfilePageState();
+  MyProfilePageState createState() {
+    // ignore: no_logic_in_create_state
+    return MyProfilePageState(viewUser, amplifyState);
+  }
 }
 
-class ProfilePageState extends State<ProfilePage> {
+class MyProfilePageState extends State<MyProfilePage> {
+  late UserModel viewUser;
+  late AmplifyState amplifyState;
+  // late Location location;
+  MyProfilePageState(this.viewUser, this.amplifyState);
+  NetworkImage image = NetworkImage('https://picsum.photos/250?image=9');
   final VoidCallback onClicked = () async {};
   final isEdit = false;
-  late var image;
-  late AmplifyState amplifyState;
+  List<String> list = ["A", "B", "C", "D"];
+  String displayText = 'Placeholder Text';
+  void action;
+  String status = 'ShouldBeChanged';
+  late String name = viewUser.Name.toString();
+  late String gender = viewUser.Gender.toString();
+  late String birthday = viewUser.Birthday.toString();
+  late String school = viewUser.School.toString();
+  late String work = viewUser.Work.toString();
 
+  // Here
   @override
   initState() {
     super.initState();
-    amplifyState = widget.amplifyState;
+
     try {
-        image = amplifyState.profilePicture;
-    } catch (_){
-      image = NetworkImage('https://picsum.photos/250?image=9');
+      amplifyState
+          .getUserProfilePicture(viewUser)
+          .then((result) => setState(() {
+        image = NetworkImage(result);
+      }));
+    } catch (_) {
+      image = const NetworkImage('https://picsum.photos/250?image=9');
     }
   }
 
-  newProfileImage() {
-          setState(() {
-            image = amplifyState.profilePicture;
-          });
+  refreshPage() {
+    if (!mounted) {
+      debugPrint("Not refreshing");
+      return;
+    }
+    setState(() {
+      name = viewUser.Name.toString();
+      gender = viewUser.Gender.toString();
+      birthday = viewUser.Birthday.toString();
+      school = viewUser.School.toString();
+      work = viewUser.Work.toString();
+      image = amplifyState.profilePicture;
+    });
+    debugPrint("Refreshing");
   }
 
   @override
   Widget build(BuildContext context) {
-    // Define user here
-    //Future<UserModel> currentUser = getUserProfile();
+    return Scaffold(
+      body: buildProfile(),
+    );
+  }
 
-    // ** Fix build functions to accept user data **
-
+  Widget buildProfile() {
     return ListView(physics: const BouncingScrollPhysics(), children: [
       const SizedBox(height: 24),
-      ProfileWidget(context),
+      ProfileWidget(viewUser, context),
       const SizedBox(height: 24),
-      buildName("test_name", "test_email"),
-      const SizedBox(height: 36),
-      buildAbout("test_bio"),
+      buildName(name),
+      const SizedBox(height: 24),
+      buildAbout(viewUser),
     ]);
   }
 
-  Widget buildName(String name, String email) => Column(
-        children: [
-          Text(
-            name,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            email,
-            style: const TextStyle(color: Colors.grey),
-          )
-        ],
-      );
+  Widget buildName(String name) => Column(
+    children: [
+      Text(
+        name,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+      ),
+      const SizedBox(height: 4),
+    ],
+  );
 
-  Widget buildAbout(String about) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 48),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'About',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              about,
-              style: const TextStyle(fontSize: 16, height: 1.4),
-            ),
-          ],
+  Widget buildAbout(UserModel viewUser) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 48),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'About',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
-      );
+        const SizedBox(height: 10),
+        Text(
+          '\u{1F464} ' + name,
+          style: const TextStyle(fontSize: 20, height: 2.5),
+        ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
+        Text(
+          '\u{1F46B} ' + gender,
+          style: const TextStyle(fontSize: 20, height: 2.5),
+        ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
+        Text(
+          '\u{1F382} ' + birthday,
+          style: const TextStyle(fontSize: 20, height: 2.5),
+        ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
+        Visibility(
+          visible: (viewUser.School != null) ? true : false,
+          child: Text(
+            '\u{1F3EB} ' + school,
+            style: const TextStyle(fontSize: 20, height: 2.5),
+          ),
+        ),
+        Visibility(
+          visible: (viewUser.School != null) ? true : false,
+          child: const Divider(height: 1, thickness: 1, color: Colors.black)
+        ),
+        Visibility(
+          visible: (viewUser.Work != null) ? true : false,
+          child: Text(
+            '\u{1F3E2} ' + work,
+            style: const TextStyle(fontSize: 20, height: 2.5),
+          ),
+        ),
+        Visibility(
+          visible: (viewUser.Work != null) ? true : false,
+          child: const Divider(height: 1, thickness: 1, color: Colors.black)
+        ),
+        Text(
+          '\u{1F4E7} ' + viewUser.Email.toString(),
+          style: const TextStyle(fontSize: 20, height: 2.5),
+        ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
+        Text(
+          '\u{1F4F1} ' + viewUser.PhoneNumber.toString(),
+          style: const TextStyle(fontSize: 20, height: 2.5),
+        ),
+        const Divider(height: 1, thickness: 1, color: Colors.black),
+      ],
+    ),
+  );
 
-
-  Widget ProfileWidget(BuildContext context) {
+  Widget ProfileWidget(UserModel viewUser, BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
 
     return Center(
       child: Stack(
         children: [
           buildImage(),
-          Positioned(
-            bottom: 0,
-            right: 4,
-            child: buildEditIcon(color),
-          ),
         ],
       ),
     );
   }
 
   Widget buildImage() {
-
     return ClipOval(
       child: Material(
         color: Colors.transparent,
@@ -108,31 +184,24 @@ class ProfilePageState extends State<ProfilePage> {
           fit: BoxFit.cover,
           width: 128,
           height: 128,
-          child: InkWell(onTap: onClicked),
+          child: InkWell (
+            onTap: () async {
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => EditMyProfilePage(
+                        viewUser: viewUser,
+                        // location: location,
+                        amplifyState: amplifyState,
+                      )));
+            refreshPage();
+            }
+        )
+          //child: InkWell(onTap: onClicked),
         ),
       ),
     );
   }
-
-  Widget buildEditIcon(Color color) => buildCircle(
-    color: Colors.white,
-    all: 3,
-    child: buildCircle(
-            all: 8,
-            color: color,
-            child: InkWell(
-                  child: Icon(
-                  isEdit ? Icons.add_a_photo : Icons.edit,
-                  color: Colors.white,
-                  size: 20
-                ),
-                onTap: () {
-                  amplifyState.uploadImage(this);
-                  newProfileImage();
-                })
-
-        ),
-    );
 
   Widget buildCircle({
     required Widget child,
