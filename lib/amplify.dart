@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'edit_my_profile_page.dart';
 
 class AmplifyState {
   bool isAmplifyConfigured = false;
@@ -337,25 +338,12 @@ class AmplifyState {
     }
   }
 
-  void updateProfileAttribute(String attr, String newValue) async {
+  void updateProfileAttribute(String name, String birthday, String gender, String school, String work) async {
     try {
       final userToUpdate = await getUserProfile();
       UserModel updatedUser = userToUpdate;
-      if (attr == 'Name') {
-        updatedUser = userToUpdate.copyWith(Name: newValue);
-      } else if (attr == 'Birthday') {
-        updatedUser = userToUpdate.copyWith(Birthday: newValue);
-      } else if (attr == 'Gender') {
-        updatedUser = userToUpdate.copyWith(Gender: newValue);
-      }
-      // if(attr == 'Age')
-      // {
-      //    userToUpdate.copyWith(Age: newValue);
-      // }
-      // if(attr == 'Email')
-      // {
-      //    userToUpdate.copyWith(Email: newValue);
-      // }
+
+      updatedUser = userToUpdate.copyWith(Name: name, Birthday: birthday, Gender: gender, School: school, Work: work);
 
       await Amplify.DataStore.save(updatedUser);
 
@@ -809,7 +797,7 @@ class AmplifyState {
     });
   }
 
-  Future<void> uploadImage(ProfilePageState state) async {
+  Future<void> uploadImage(EditMyProfilePageState state) async {
     // Select image from user's gallery
     final XFile? pickedFile =
         await picker.pickImage(source: ImageSource.gallery);
