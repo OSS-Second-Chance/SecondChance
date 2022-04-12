@@ -66,6 +66,7 @@ class MyHomePageState extends State<DashboardScreen>
 
   String AppStage = "Profile";
   late Widget AppState;
+  late Future<List<Location>> locations;
   // String dropDownValue;
   // TextEditingController textController;
 
@@ -137,7 +138,7 @@ class MyHomePageState extends State<DashboardScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                      children: const [
                         Icon(
                           Icons.wine_bar,
                           color: Colors.black,
@@ -156,7 +157,7 @@ class MyHomePageState extends State<DashboardScreen>
                           children: [
                             Text(
                               curLocation.BarName,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontFamily: 'Lexend Deca',
                                 color: Color(0xFF15212B),
                                 fontSize: 18,
@@ -171,10 +172,10 @@ class MyHomePageState extends State<DashboardScreen>
                             Expanded(
                               child: Padding(
                                 padding:
-                                    EdgeInsetsDirectional.fromSTEB(0, 4, 4, 0),
+                                    const EdgeInsetsDirectional.fromSTEB(0, 4, 4, 0),
                                 child: Text(
                                   curLocation.Region,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontFamily: 'Lexend Deca',
                                     color: Color(0xFF4B39EF),
                                     fontSize: 12,
@@ -189,11 +190,11 @@ class MyHomePageState extends State<DashboardScreen>
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
+                    padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
+                      children: const [
                         Icon(
                           Icons.chevron_right_rounded,
                           color: Color(0xFF82878C),
@@ -219,7 +220,7 @@ class MyHomePageState extends State<DashboardScreen>
   }
 
   Widget _buildLocations() {
-    Future<List<Location>> locations = amplifyState.getAllLocations();
+    locations = amplifyState.getAllLocations();
     return FutureBuilder<List<Location>>(
         future: locations,
         builder: (context, snapshot) {
@@ -242,9 +243,30 @@ class MyHomePageState extends State<DashboardScreen>
                   return _buildRowNew(snapshot.data![index]);
                 });
           } else {
-            return const Text('Loading');
+            return ListView.builder(
+              itemCount: 1,
+              itemBuilder: (context, i) {
+                return const Text("Loading... Try Pulling Down to Refresh!");
+              },
+            );
           }
         });
+  }
+
+  Widget _buildMyProfilePage() {
+    Future<UserModel> currentUser = amplifyState.getUserProfile();
+    return FutureBuilder<UserModel> (
+      future: currentUser,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasData) {
+          return MyProfilePage(viewUser: snapshot.requireData, amplifyState: amplifyState);
+        } else {
+          return const Text('Loading');
+        }
+      }
+    );
   }
 
   @override
@@ -285,10 +307,16 @@ class MyHomePageState extends State<DashboardScreen>
             // bottomNavigationBar: menu(),
 
             body: TabBarView(controller: _controller, children: [
-              _buildLocations(),
+              RefreshIndicator(child: _buildLocations(),
+                  onRefresh: () {
+                      setState(() {
+                        locations = amplifyState.getAllLocations();
+                      });
+                      return locations;
+                  }),
               MatchPage(amplifyState: amplifyState),
               const MessagingPage(),
-              ProfilePage(amplifyState: amplifyState)
+              _buildMyProfilePage()
             ])));
   }
 }
