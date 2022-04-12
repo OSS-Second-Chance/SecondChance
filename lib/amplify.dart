@@ -27,7 +27,7 @@ class AmplifyState {
   late String? number;
   late MyHomePageState homePageState;
 
-  void configureAmplify(BuildContext context, AmplifyState amplifyState,
+   configureAmplify(BuildContext context, AmplifyState amplifyState,
       MyHomePageState myHomePageState) async {
     // Add Pinpoint and Cognito Plugins, or any other plugins you want to use
     homePageState = myHomePageState;
@@ -45,6 +45,7 @@ class AmplifyState {
       debugPrint("before configure");
       await Amplify.configure(amplifyconfig);
       isAmplifyConfigured = true;
+      clearLocalDataStore();
       debugPrint("Amplify Configuration Finished");
       try {
         if (isAmplifyConfigured) {
@@ -271,10 +272,9 @@ class AmplifyState {
 
   Future<List<Location>> getAllLocations() async {
     try {
-      List<Location> locations =
-          await Amplify.DataStore.query(Location.classType);
-
-      return (locations);
+      return Amplify.DataStore.query(Location.classType).then((locations) {
+        return (locations);
+      });
     } catch (e) {
       debugPrint(e.toString());
       rethrow;
