@@ -89,9 +89,16 @@ jobs:
       - name: version
         run: echo "::set-output name=version::$(cat VERSION)"
         id: version
-      - uses: rickstaa/action-create-tag@v1
+      - name: Create tag
+        uses: actions/github-script@v5
         with:
-          tag: ${{ steps.version.outputs.version }}
+          script: |
+              github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: 'refs/tags/${{ steps.version.outputs.version }}',
+                sha: context.sha
+              })
       - name: Release Build
         id: create_release
         uses: softprops/action-gh-release@v1
