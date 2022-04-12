@@ -131,23 +131,23 @@ class _ViewProfilePage extends State<ViewProfilePage> {
             const SizedBox(height: 10),
             Text(
               '\u{1F464} ' + viewUser.Name.toString(),
-              style: const TextStyle(fontSize: 20, height: 2.5),
+              style: const TextStyle(fontSize: 18, height: 2.5),
             ),
             Text(
               '\u{1F46B} ' + viewUser.Gender.toString(),
-              style: const TextStyle(fontSize: 20, height: 2.5),
+              style: const TextStyle(fontSize: 18, height: 2.5),
             ),
             Text(
               '\u{1F382} ' + viewUser.Birthday.toString(),
-              style: const TextStyle(fontSize: 20, height: 2.5),
+              style: const TextStyle(fontSize: 18, height: 2.5),
             ),
             Text(
               '\u{1F4E7} ' + viewUser.Email.toString(),
-              style: const TextStyle(fontSize: 20, height: 2.5),
+              style: const TextStyle(fontSize: 18, height: 2.5),
             ),
             Text(
               '\u{1F4F1} ' + viewUser.PhoneNumber.toString(),
-              style: const TextStyle(fontSize: 20, height: 2.5),
+              style: const TextStyle(fontSize: 18, height: 2.5),
             ),
           ],
         ),

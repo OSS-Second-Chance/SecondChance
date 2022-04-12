@@ -8,9 +8,9 @@ import 'amplify.dart';
 class MyProfilePage extends StatefulWidget {
   const MyProfilePage(
       {Key? key,
-        required this.viewUser,
-        // this.location,
-        required this.amplifyState})
+      required this.viewUser,
+      // this.location,
+      required this.amplifyState})
       : super(key: key);
 
   final UserModel viewUser;
@@ -51,8 +51,8 @@ class MyProfilePageState extends State<MyProfilePage> {
       amplifyState
           .getUserProfilePicture(viewUser)
           .then((result) => setState(() {
-        image = NetworkImage(result);
-      }));
+                image = NetworkImage(result);
+              }));
     } catch (_) {
       image = const NetworkImage('https://picsum.photos/250?image=9');
     }
@@ -93,75 +93,75 @@ class MyProfilePageState extends State<MyProfilePage> {
   }
 
   Widget buildName(String name) => Column(
-    children: [
-      Text(
-        name,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-      ),
-      const SizedBox(height: 4),
-    ],
-  );
+        children: [
+          Text(
+            name,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+          ),
+          const SizedBox(height: 4),
+        ],
+      );
 
   Widget buildAbout(UserModel viewUser) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 48),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'About',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        padding: const EdgeInsets.symmetric(horizontal: 48),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'About',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '\u{1F464} ' + name,
+              style: const TextStyle(fontSize: 18, height: 2.5),
+            ),
+            const Divider(height: 1, thickness: 1, color: Colors.black),
+            Text(
+              '\u{1F46B} ' + gender,
+              style: const TextStyle(fontSize: 18, height: 2.5),
+            ),
+            const Divider(height: 1, thickness: 1, color: Colors.black),
+            Text(
+              '\u{1F382} ' + birthday,
+              style: const TextStyle(fontSize: 18, height: 2.5),
+            ),
+            const Divider(height: 1, thickness: 1, color: Colors.black),
+            Visibility(
+              visible: (viewUser.School != null) ? true : false,
+              child: Text(
+                '\u{1F3EB} ' + school,
+                style: const TextStyle(fontSize: 18, height: 2.5),
+              ),
+            ),
+            Visibility(
+                visible: (viewUser.School != null) ? true : false,
+                child: const Divider(
+                    height: 1, thickness: 1, color: Colors.black)),
+            Visibility(
+              visible: (viewUser.Work != null) ? true : false,
+              child: Text(
+                '\u{1F3E2} ' + work,
+                style: const TextStyle(fontSize: 18, height: 2.5),
+              ),
+            ),
+            Visibility(
+                visible: (viewUser.Work != null) ? true : false,
+                child: const Divider(
+                    height: 1, thickness: 1, color: Colors.black)),
+            Text(
+              '\u{1F4E7} ' + viewUser.Email.toString(),
+              style: const TextStyle(fontSize: 18, height: 2.5),
+            ),
+            const Divider(height: 1, thickness: 1, color: Colors.black),
+            Text(
+              '\u{1F4F1} ' + viewUser.PhoneNumber.toString(),
+              style: const TextStyle(fontSize: 18, height: 2.5),
+            ),
+            const Divider(height: 1, thickness: 1, color: Colors.black),
+          ],
         ),
-        const SizedBox(height: 10),
-        Text(
-          '\u{1F464} ' + name,
-          style: const TextStyle(fontSize: 20, height: 2.5),
-        ),
-        const Divider(height: 1, thickness: 1, color: Colors.black),
-        Text(
-          '\u{1F46B} ' + gender,
-          style: const TextStyle(fontSize: 20, height: 2.5),
-        ),
-        const Divider(height: 1, thickness: 1, color: Colors.black),
-        Text(
-          '\u{1F382} ' + birthday,
-          style: const TextStyle(fontSize: 20, height: 2.5),
-        ),
-        const Divider(height: 1, thickness: 1, color: Colors.black),
-        Visibility(
-          visible: (viewUser.School != null) ? true : false,
-          child: Text(
-            '\u{1F3EB} ' + school,
-            style: const TextStyle(fontSize: 20, height: 2.5),
-          ),
-        ),
-        Visibility(
-          visible: (viewUser.School != null) ? true : false,
-          child: const Divider(height: 1, thickness: 1, color: Colors.black)
-        ),
-        Visibility(
-          visible: (viewUser.Work != null) ? true : false,
-          child: Text(
-            '\u{1F3E2} ' + work,
-            style: const TextStyle(fontSize: 20, height: 2.5),
-          ),
-        ),
-        Visibility(
-          visible: (viewUser.Work != null) ? true : false,
-          child: const Divider(height: 1, thickness: 1, color: Colors.black)
-        ),
-        Text(
-          '\u{1F4E7} ' + viewUser.Email.toString(),
-          style: const TextStyle(fontSize: 20, height: 2.5),
-        ),
-        const Divider(height: 1, thickness: 1, color: Colors.black),
-        Text(
-          '\u{1F4F1} ' + viewUser.PhoneNumber.toString(),
-          style: const TextStyle(fontSize: 20, height: 2.5),
-        ),
-        const Divider(height: 1, thickness: 1, color: Colors.black),
-      ],
-    ),
-  );
+      );
 
   Widget ProfileWidget(UserModel viewUser, BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
@@ -180,25 +180,23 @@ class MyProfilePageState extends State<MyProfilePage> {
       child: Material(
         color: Colors.transparent,
         child: Ink.image(
-          image: image,
-          fit: BoxFit.cover,
-          width: 128,
-          height: 128,
-          child: InkWell (
-            onTap: () async {
+            image: image,
+            fit: BoxFit.cover,
+            width: 128,
+            height: 128,
+            child: InkWell(onTap: () async {
               await Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) => EditMyProfilePage(
-                        viewUser: viewUser,
-                        // location: location,
-                        amplifyState: amplifyState,
-                      )));
-            refreshPage();
-            }
-        )
-          //child: InkWell(onTap: onClicked),
-        ),
+                            viewUser: viewUser,
+                            // location: location,
+                            amplifyState: amplifyState,
+                          )));
+              refreshPage();
+            })
+            //child: InkWell(onTap: onClicked),
+            ),
       ),
     );
   }
