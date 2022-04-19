@@ -46,13 +46,14 @@ class AmplifyState {
       debugPrint("before configure");
       await Amplify.configure(amplifyconfig);
       isAmplifyConfigured = true;
-      clearLocalDataStore();
+      myHomePageState.finishedLoading();
       debugPrint("Amplify Configuration Finished");
       try {
         if (isAmplifyConfigured) {
           debugPrint("in verifyLogin: Amplify is configured");
           await Amplify.Auth.getCurrentUser();
           loggedIn = true;
+          await Amplify.DataStore.start();
           getDownloadUrl().then((result) {
             profilePicture = NetworkImage(result);
           });
@@ -134,6 +135,7 @@ class AmplifyState {
         password: password,
       );
       loggedIn = true;
+      await Amplify.DataStore.start();
 
       getDownloadUrl().then((result) {
         profilePicture = NetworkImage(result);
@@ -166,6 +168,7 @@ class AmplifyState {
     try {
       await Amplify.Auth.signOut();
       loggedIn = false;
+      await Amplify.DataStore.stop();
     } on AuthException catch (e) {
       debugPrint(e.message);
     }
@@ -281,6 +284,32 @@ class AmplifyState {
       rethrow;
     }
   }
+
+  Future<List<Date>> getAllDates(Location location) async {
+    try {
+      return Amplify.DataStore.query(Date.classType, where: Date.LOCATIONID.eq(location.id)).then((dates) {
+        return (dates);
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+
+  Future<List<UserModel>> getUsersFromDate(Date date) async {
+    try {
+      List<UserModel> users = [];
+      return Amplify.DataStore.query(DateUserModel.classType, where: Date.ID.eq(date.id)).then((userDates) {
+        for (var element in userDates) { users.add(element.userModel);}
+        return (users);
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
 
   Future<Location> getFirstLocation() async {
     try {
@@ -758,7 +787,7 @@ class AmplifyState {
     }
   }
 
-  void clearLocalDataStore() async {
+  clearLocalDataStore() async {
     try {
       debugPrint("WARNING: Clearing DB");
       await Amplify.DataStore.clear();
@@ -873,6 +902,52 @@ class AmplifyState {
     }
   }
 
+  void checkDate(DateTime date, Location location) async {
+     // Query for date with relationship to given location
+    TemporalDate awsDate = TemporalDate(date);
+    List<Date> dates = await Amplify.DataStore.query(Date.classType,
+                              where: Date.LOCATIONID.eq(location.id).and(Date.DATE.eq(awsDate)));
+
+    // If no relationship is found, create one
+    if (dates.isEmpty) {
+      Date newDate = Date(
+        date: awsDate,
+        locationID: location.id
+      );
+
+      await Amplify.DataStore.save(newDate);
+    }
+  }
+
+
+  Future<bool> checkDateUser(Date date, String userid) async {
+    // Query for users under this date and check for user
+    UserModel user = await getUserProfile();
+    List<DateUserModel> users = await Amplify.DataStore.query(DateUserModel.classType,
+    where: DateUserModel.DATE.eq(date.id).and(DateUserModel.USERMODEL.eq(user.id)));
+    if (users.isEmpty) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+
+  void removeUserFromDate(Date date, String userid) async {
+    // Query for users under this date and check for user
+    // ignore: unused_local_variable
+    List<UserModel> user = await Amplify.DataStore.query(UserModel.classType, where: UserModel.ID.eq(userid));
+    List<DateUserModel> userDateModel = await Amplify.DataStore.query(DateUserModel.classType, where: Date.ID.eq(date.id).and(UserModel.ID.eq(user.first.id)));
+    await Amplify.DataStore.delete(userDateModel.first);
+  }
+
+  void addUsertoDate(Date date, String userid) async {
+    // Query for users under this date and check for user
+    // ignore: unused_local_variable
+    List<UserModel> user = await Amplify.DataStore.query(UserModel.classType, where: UserModel.ID.eq(userid));
+    DateUserModel userDate = DateUserModel(date: date, userModel: user.first);
+    await Amplify.DataStore.save(userDate);
+  }
 
   Future<List<UserModel>> getUsersFromList(List<String> users) async {
     try {
