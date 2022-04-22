@@ -58,10 +58,7 @@ jobs:
         with:
           api-level: 29
           script:
-            ls &
-            flutter drive \
-            --driver=test_driver/integration_test.dart \
-            --target=integration_test/amplify_test.dart
+            flutter drive --driver="./test_driver/integration_test.dart" --target="./integration_test/amplify_test.dart"
 
       - name: Run Unit Tests
         shell: bash
