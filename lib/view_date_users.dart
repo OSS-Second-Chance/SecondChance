@@ -71,9 +71,9 @@ class _ViewDateUsersState extends State<ViewDateUsers> {
           child: _buildUsers(),
           onRefresh: ()  {
 
-            return amplifyState.getUsersFromDate(date).then((_) {
-              amplifyState.getCurrentAuthUser().then((result) {
-                user = result.userId;
+              return amplifyState.getCurrentAuthUser().then((userResult) {
+                user = userResult.userId;
+                amplifyState.getUsersFromDate(date).then((_) {
                 amplifyState.checkDateUser(date, user).then((result) {
                   if (!result) {
                     setState(() {
@@ -155,7 +155,12 @@ class _ViewDateUsersState extends State<ViewDateUsers> {
             return const CircularProgressIndicator();
           } else if (snapshot.hasData) {
             if (snapshot.data!.isEmpty) {
-              return const Text('None');
+              return ListView.builder(
+                itemCount: 1,
+                itemBuilder: (context, i) {
+                  return const Text("Loading... Try Pulling Down to Refresh!");
+                },
+              );
             }
             debugPrint(snapshot.data.toString());
             return ListView.builder(

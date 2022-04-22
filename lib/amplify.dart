@@ -28,10 +28,8 @@ class AmplifyState {
   late String? number;
   late MyHomePageState homePageState;
 
-   configureAmplify(BuildContext context, AmplifyState amplifyState,
-      MyHomePageState myHomePageState) async {
+   configureAmplify(BuildContext context, AmplifyState amplifyState) async {
     // Add Pinpoint and Cognito Plugins, or any other plugins you want to use
-    homePageState = myHomePageState;
     AmplifyAuthCognito authPlugin = AmplifyAuthCognito();
     AmplifyDataStore datastorePlugin =
         AmplifyDataStore(modelProvider: ModelProvider.instance);
@@ -46,7 +44,6 @@ class AmplifyState {
       debugPrint("before configure");
       await Amplify.configure(amplifyconfig);
       isAmplifyConfigured = true;
-      myHomePageState.finishedLoading();
       debugPrint("Amplify Configuration Finished");
       try {
         if (isAmplifyConfigured) {
@@ -287,7 +284,7 @@ class AmplifyState {
 
   Future<List<Date>> getAllDates(Location location) async {
     try {
-      return Amplify.DataStore.query(Date.classType, where: Date.LOCATIONID.eq(location.id)).then((dates) {
+      return Amplify.DataStore.query(Date.classType, where: Date.LOCATIONID.eq(location.id), sortBy: [Date.DATE.ascending()]).then((dates) {
         return (dates);
       });
     } catch (e) {
@@ -300,8 +297,12 @@ class AmplifyState {
   Future<List<UserModel>> getUsersFromDate(Date date) async {
     try {
       List<UserModel> users = [];
-      return Amplify.DataStore.query(DateUserModel.classType, where: Date.ID.eq(date.id)).then((userDates) {
-        for (var element in userDates) { users.add(element.userModel);}
+      UserModel user = await getUserProfile();
+      return Amplify.DataStore.query(DateUserModel.classType, where: DateUserModel.DATE.eq(date.id).and(UserModel.ID.ne(user.id))).then((userDates) {
+        debugPrint(userDates.toString());
+        for (var element in userDates) {
+          users.add(element.userModel);
+          debugPrint(element.userModel.Name);}
         return (users);
       });
     } catch (e) {
@@ -323,7 +324,7 @@ class AmplifyState {
     }
   }
 
-  Future<UserModel> getUserProfile() async {
+  Future getUserProfile() async {
     try {
       AuthUser? curUser;
       curUser = await Amplify.Auth.getCurrentUser();
@@ -344,7 +345,7 @@ class AmplifyState {
       return activeUser;
     } catch (e) {
       debugPrint(e.toString());
-      rethrow;
+      return null;
     }
   }
 
@@ -384,7 +385,7 @@ class AmplifyState {
 
   void deleteProfile() async {
     try {
-      final userToBeDeleted = await getUserProfile();
+      final userToBeDeleted = await getUserProfile() as UserModel;
 
       await Amplify.DataStore.delete(userToBeDeleted);
 
@@ -933,19 +934,19 @@ class AmplifyState {
     }
   }
 
-  void removeUserFromDate(Date date, String userid) async {
+  removeUserFromDate(Date date, String userid) async {
     // Query for users under this date and check for user
     // ignore: unused_local_variable
-    List<UserModel> user = await Amplify.DataStore.query(UserModel.classType, where: UserModel.ID.eq(userid));
-    List<DateUserModel> userDateModel = await Amplify.DataStore.query(DateUserModel.classType, where: Date.ID.eq(date.id).and(UserModel.ID.eq(user.first.id)));
+    UserModel user = await getUserProfile();
+    List<DateUserModel> userDateModel = await Amplify.DataStore.query(DateUserModel.classType, where: DateUserModel.DATE.eq(date.id).and(DateUserModel.USERMODEL.eq(user.id)));
     await Amplify.DataStore.delete(userDateModel.first);
   }
 
-  void addUsertoDate(Date date, String userid) async {
+  addUsertoDate(Date date, String userid) async {
     // Query for users under this date and check for user
     // ignore: unused_local_variable
-    List<UserModel> user = await Amplify.DataStore.query(UserModel.classType, where: UserModel.ID.eq(userid));
-    DateUserModel userDate = DateUserModel(date: date, userModel: user.first);
+    UserModel user = await getUserProfile();
+    DateUserModel userDate = DateUserModel(date: date, userModel: user);
     await Amplify.DataStore.save(userDate);
   }
 

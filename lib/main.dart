@@ -1,3 +1,4 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
@@ -8,7 +9,6 @@ import 'location_page.dart';
 import 'models/ModelProvider.dart';
 import 'models/Location.dart';
 import 'dart:async';
-
 void main() {
   runApp(const MyApp());
 }
@@ -90,7 +90,9 @@ class MyHomePageState extends State<DashboardScreen>
       setState(() {});
       debugPrint("Selected Index: " + _controller.index.toString());
     });
-    amplifyState.configureAmplify(context, amplifyState, this);
+    amplifyState.configureAmplify(context, amplifyState).then((_) {
+      finishedLoading();
+    });
     // amplifyState.clearLocalDataStore();
   }
 
@@ -250,19 +252,25 @@ class MyHomePageState extends State<DashboardScreen>
   }
 
   Widget _buildMyProfilePage() {
-    Future<UserModel> currentUser = amplifyState.getUserProfile();
-    return FutureBuilder<UserModel> (
-      future: currentUser,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        } else if (snapshot.hasData) {
-          return MyProfilePage(viewUser: snapshot.requireData, amplifyState: amplifyState);
-        } else {
-          return const Text('Loading');
-        }
-      }
-    );
+    try {
+      Future<dynamic> currentUser = amplifyState.getUserProfile();
+
+      return FutureBuilder<dynamic>(
+          future: currentUser,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasData) {
+              return MyProfilePage(
+                  viewUser: snapshot.requireData, amplifyState: amplifyState);
+            } else {
+              return const Text('Loading');
+            }
+          }
+      );
+    } on SignedOutException {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
   @override
