@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
@@ -27,8 +29,29 @@ class AmplifyState {
   late String? birthdate;
   late String? number;
   late MyHomePageState homePageState;
+  late StreamController streamController;
+  late GlobalKey<NavigatorState> navigatorKey;
 
    configureAmplify(BuildContext context, AmplifyState amplifyState) async {
+     StreamSubscription hubSubscription = Amplify.Hub.listen([HubChannel.Auth], (hubEvent) {
+       switch(hubEvent.eventName) {
+         case 'SIGNED_IN':
+           debugPrint('USER IS SIGNED IN');
+           handleSignedIn();
+           break;
+         case 'SIGNED_OUT':
+           debugPrint('USER IS SIGNED OUT');
+           break;
+         case 'SESSION_EXPIRED':
+           debugPrint('SESSION HAS EXPIRED');
+           break;
+         case 'USER_DELETED':
+           debugPrint('USER HAS BEEN DELETED');
+           break;
+       }
+     });
+
+     navigatorKey = GlobalKey<NavigatorState>();
     // Add Pinpoint and Cognito Plugins, or any other plugins you want to use
     AmplifyAuthCognito authPlugin = AmplifyAuthCognito();
     AmplifyDataStore datastorePlugin =
@@ -45,26 +68,6 @@ class AmplifyState {
       await Amplify.configure(amplifyconfig);
       isAmplifyConfigured = true;
       debugPrint("Amplify Configuration Finished");
-      try {
-        if (isAmplifyConfigured) {
-          debugPrint("in verifyLogin: Amplify is configured");
-          await Amplify.Auth.getCurrentUser();
-          loggedIn = true;
-          await Amplify.DataStore.start();
-          getDownloadUrl().then((result) {
-            profilePicture = NetworkImage(result);
-          });
-          return;
-        }
-      } on SignedOutException {
-        loggedIn = false;
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    LoginScreen(key: null, amplifyState: amplifyState)));
-        return;
-      }
     } on AmplifyAlreadyConfiguredException {
       debugPrint(
           "Tried to reconfigure Amplify; this can occur when your app restarts on Android.");
@@ -88,6 +91,22 @@ class AmplifyState {
       debugPrint(e.message);
       return e.message;
     }
+  }
+
+  void handleSignedIn() async {
+    await Amplify.DataStore.start();
+    getDownloadUrl().then((result) {
+      profilePicture = NetworkImage(result);
+    });
+
+  }
+
+  void handleSignedOut() async {
+    await Amplify.DataStore.stop();
+    navigatorKey.currentState?.push(
+        MaterialPageRoute(
+            builder: (context) =>
+                LoginScreen(key: null, amplifyState: this)));
   }
 
   Future<String> resendSignUp(String email) async {
@@ -132,7 +151,6 @@ class AmplifyState {
         password: password,
       );
       loggedIn = true;
-      await Amplify.DataStore.start();
 
       getDownloadUrl().then((result) {
         profilePicture = NetworkImage(result);
@@ -165,7 +183,6 @@ class AmplifyState {
     try {
       await Amplify.Auth.signOut();
       loggedIn = false;
-      await Amplify.DataStore.stop();
     } on AuthException catch (e) {
       debugPrint(e.message);
     }
@@ -325,7 +342,10 @@ class AmplifyState {
   }
 
   Future getUserProfile() async {
-    try {
+    if (!loggedIn) {
+      return null;
+    }
+     try {
       AuthUser? curUser;
       curUser = await Amplify.Auth.getCurrentUser();
       final activeID = curUser.userId;
