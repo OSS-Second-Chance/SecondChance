@@ -18,7 +18,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     
-    runs-on: macOS-latest
+    runs-on: self-hosted
     steps:
       
       # Setup the environment
@@ -58,7 +58,6 @@ jobs:
         with:
           api-level: 29
           script:
-            ls
             flutter drive \
             --driver=test_driver/integration_test.dart \
             --target=integration_test/amplify_test.dart
