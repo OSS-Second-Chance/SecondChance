@@ -47,17 +47,18 @@ jobs:
           ./amplify.sh --appid d30wx1kvbjtgdy --envName staging --accessKey "$AWS_ACCESS_KEY_ID" --secretKey "$AWS_SECRET_ACCESS_KEY"
           flutter pub get
 
-      - name: Build App
-        shell: bash
-        run: |
-          flutter build appbundle
-          flutter build apk --split-per-abi
+      #- name: Build App
+      #  shell: bash
+      #  run: |
+      #    flutter build appbundle
+      #    flutter build apk --split-per-abi
 
       - name: Run Integration Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
           script:
+            ls &
             flutter drive \
             --driver=test_driver/integration_test.dart \
             --target=integration_test/amplify_test.dart
