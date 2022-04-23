@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
@@ -27,11 +29,13 @@ class AmplifyState {
   late String? birthdate;
   late String? number;
   late MyHomePageState homePageState;
+  late StreamController streamController;
+  late GlobalKey<NavigatorState> navigatorKey;
 
-   configureAmplify(BuildContext context, AmplifyState amplifyState,
-      MyHomePageState myHomePageState) async {
+   configureAmplify(BuildContext context, AmplifyState amplifyState) async {
+
+     navigatorKey = GlobalKey<NavigatorState>();
     // Add Pinpoint and Cognito Plugins, or any other plugins you want to use
-    homePageState = myHomePageState;
     AmplifyAuthCognito authPlugin = AmplifyAuthCognito();
     AmplifyDataStore datastorePlugin =
         AmplifyDataStore(modelProvider: ModelProvider.instance);
@@ -45,27 +49,36 @@ class AmplifyState {
     try {
       debugPrint("before configure");
       await Amplify.configure(amplifyconfig);
+      StreamSubscription hubSubscription = Amplify.Hub.listen([HubChannel.Auth], (hubEvent) async {
+        switch(hubEvent.eventName) {
+          case 'SIGNED_IN':
+            debugPrint('USER IS SIGNED IN');
+            await handleSignedIn();
+            break;
+          case 'SIGNED_OUT':
+            debugPrint('USER IS SIGNED OUT');
+            await handleSignedOut();
+            break;
+          case 'SESSION_EXPIRED':
+            debugPrint('SESSION HAS EXPIRED');
+            break;
+          case 'USER_DELETED':
+            debugPrint('USER HAS BEEN DELETED');
+            break;
+        }
+      });
       isAmplifyConfigured = true;
-      clearLocalDataStore();
       debugPrint("Amplify Configuration Finished");
       try {
-        if (isAmplifyConfigured) {
-          debugPrint("in verifyLogin: Amplify is configured");
-          await Amplify.Auth.getCurrentUser();
-          loggedIn = true;
-          getDownloadUrl().then((result) {
-            profilePicture = NetworkImage(result);
-          });
-          return;
-        }
-      } on SignedOutException {
-        loggedIn = false;
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    LoginScreen(key: null, amplifyState: amplifyState)));
-        return;
+        await Amplify.Auth.getCurrentUser();
+        await handleSignedIn();
+      } catch (_) {
+        // Not logged in
+        await Amplify.DataStore.stop();
+        Navigator.push(context,
+        MaterialPageRoute(
+            builder: (context) =>
+                LoginScreen(key: null, amplifyState: this)));
       }
     } on AmplifyAlreadyConfiguredException {
       debugPrint(
@@ -90,6 +103,18 @@ class AmplifyState {
       debugPrint(e.message);
       return e.message;
     }
+  }
+
+  handleSignedIn() async {
+    await Amplify.DataStore.start();
+    getDownloadUrl().then((result) {
+      profilePicture = NetworkImage(result);
+    });
+
+  }
+
+  handleSignedOut() async {
+    await Amplify.DataStore.stop();
   }
 
   Future<String> resendSignUp(String email) async {
@@ -182,7 +207,6 @@ class AmplifyState {
 
       return (allUsers);
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -199,7 +223,6 @@ class AmplifyState {
 
       return (allUsers);
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -244,43 +267,43 @@ class AmplifyState {
     }
   }
 
-  //Test to read entire User List, ignore in production
-  void readAllUsers() async {
-    try {
-      final allUsers = await Amplify.DataStore.query(UserModel.classType);
-
-      debugPrint("Test readall()");
-      debugPrint(allUsers.toString());
-      debugPrint(allUsers.toString());
-      debugPrint("----");
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
-  static void readAllLocations() async {
-    try {
-      List<Location> locations =
-          await Amplify.DataStore.query(Location.classType);
-
-      debugPrint("Test readall() Locations");
-      debugPrint(locations.toString());
-      debugPrint("----");
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
   Future<List<Location>> getAllLocations() async {
     try {
       return Amplify.DataStore.query(Location.classType).then((locations) {
         return (locations);
       });
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
+
+  Future<List<Date>> getAllDates(Location location) async {
+    try {
+      return Amplify.DataStore.query(Date.classType, where: Date.LOCATIONID.eq(location.id), sortBy: [Date.DATE.ascending()]).then((dates) {
+        return (dates);
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+
+  Future<List<UserModel>> getUsersFromDate(Date date) async {
+    try {
+      List<UserModel> users = [];
+      UserModel user = await getUserProfile();
+      return Amplify.DataStore.query(DateUserModel.classType, where: DateUserModel.DATE.eq(date.id).and(UserModel.ID.ne(user.id))).then((userDates) {
+        debugPrint(userDates.toString());
+        for (var element in userDates) {
+          users.add(element.userModel);
+          debugPrint(element.userModel.Name);}
+        return (users);
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
 
   Future<Location> getFirstLocation() async {
     try {
@@ -289,13 +312,18 @@ class AmplifyState {
 
       return (locations.first);
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
 
-  Future<UserModel> getUserProfile() async {
-    try {
+  Future getUserProfile() async {
+    if (!loggedIn) {
+      navigatorKey.currentState?.push(
+          MaterialPageRoute(
+              builder: (context) =>
+                  LoginScreen(key: null, amplifyState: this)));
+    }
+     try {
       AuthUser? curUser;
       curUser = await Amplify.Auth.getCurrentUser();
       final activeID = curUser.userId;
@@ -314,8 +342,7 @@ class AmplifyState {
 
       return activeUser;
     } catch (e) {
-      debugPrint(e.toString());
-      rethrow;
+      return null;
     }
   }
 
@@ -333,12 +360,11 @@ class AmplifyState {
 
       return thisUser;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
 
-  void updateProfileAttribute(String name, String birthday, String gender, String school, String work) async {
+  Future<UserModel> updateProfileAttribute(String name, String birthday, String gender, String school, String work) async {
     try {
       final userToUpdate = await getUserProfile();
       UserModel updatedUser = userToUpdate;
@@ -346,23 +372,23 @@ class AmplifyState {
       updatedUser = userToUpdate.copyWith(Name: name, Birthday: birthday, Gender: gender, School: school, Work: work);
 
       await Amplify.DataStore.save(updatedUser);
-
+      return updatedUser;
       debugPrint('Updated user profile to ${updatedUser.toString()}');
     } catch (e) {
       debugPrint(e.toString());
+      rethrow;
     }
   }
 
   void deleteProfile() async {
     try {
-      final userToBeDeleted = await getUserProfile();
+      final userToBeDeleted = await getUserProfile() as UserModel;
 
       await Amplify.DataStore.delete(userToBeDeleted);
 
       debugPrint('Deleted user with Name: ${userToBeDeleted.Name}');
       debugPrint('Deleted user with ID: ${userToBeDeleted.id}');
     } catch (e) {
-      debugPrint(e.toString());
     }
   }
 
@@ -385,7 +411,6 @@ class AmplifyState {
 
       return myMatches;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -416,7 +441,6 @@ class AmplifyState {
       }
       return matchUsers;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -439,7 +463,6 @@ class AmplifyState {
 
       return myAdmirers;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -471,7 +494,6 @@ class AmplifyState {
       }
       return admirerUsers;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -494,7 +516,6 @@ class AmplifyState {
 
       return myRequests;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -758,7 +779,7 @@ class AmplifyState {
     }
   }
 
-  void clearLocalDataStore() async {
+  clearLocalDataStore() async {
     try {
       debugPrint("WARNING: Clearing DB");
       await Amplify.DataStore.clear();
@@ -873,6 +894,62 @@ class AmplifyState {
     }
   }
 
+  void checkDate(DateTime date, Location location) async {
+     // Query for date with relationship to given location
+    try {
+      TemporalDate awsDate = TemporalDate(date);
+      List<Date> dates = await Amplify.DataStore.query(Date.classType,
+          where: Date.LOCATIONID.eq(location.id).and(Date.DATE.eq(awsDate)));
+
+      // If no relationship is found, create one
+      if (dates.isEmpty) {
+        Date newDate = Date(
+            date: awsDate,
+            locationID: location.id
+        );
+
+        await Amplify.DataStore.save(newDate);
+      }
+    } catch (_) {
+      return;
+    }
+  }
+
+
+  Future<bool> checkDateUser(Date date, String userid) async {
+    // Query for users under this date and check for user
+    try {
+      UserModel user = await getUserProfile();
+      List<DateUserModel> users = await Amplify.DataStore.query(
+          DateUserModel.classType,
+          where: DateUserModel.DATE.eq(date.id).and(
+              DateUserModel.USERMODEL.eq(user.id)));
+      if (users.isEmpty) {
+        return false;
+      }
+      else {
+        return true;
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+
+  removeUserFromDate(Date date, String userid) async {
+    // Query for users under this date and check for user
+    // ignore: unused_local_variable
+    UserModel user = await getUserProfile();
+    List<DateUserModel> userDateModel = await Amplify.DataStore.query(DateUserModel.classType, where: DateUserModel.DATE.eq(date.id).and(DateUserModel.USERMODEL.eq(user.id)));
+    await Amplify.DataStore.delete(userDateModel.first);
+  }
+
+  addUsertoDate(Date date, String userid) async {
+    // Query for users under this date and check for user
+    // ignore: unused_local_variable
+    UserModel user = await getUserProfile();
+    DateUserModel userDate = DateUserModel(date: date, userModel: user);
+    await Amplify.DataStore.save(userDate);
+  }
 
   Future<List<UserModel>> getUsersFromList(List<String> users) async {
     try {
@@ -902,7 +979,6 @@ class AmplifyState {
         return (allUsers);
 
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -918,7 +994,6 @@ class AmplifyState {
       return (newLocation[0]);
 
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -929,7 +1004,6 @@ class AmplifyState {
       curUser = await Amplify.Auth.getCurrentUser();
       return curUser;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }

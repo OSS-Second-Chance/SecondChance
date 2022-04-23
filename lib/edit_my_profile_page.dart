@@ -188,9 +188,9 @@ class EditMyProfilePageState extends State<EditMyProfilePage> {
           ),
           const SizedBox(height: 10),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (_formKey.currentState!.validate()) {
-                amplifyState.updateProfileAttribute(name, birthday, gender, school, work);
+                await amplifyState.updateProfileAttribute(name, birthday, gender, school, work);
                 Navigator.pop(context);
               }
             },

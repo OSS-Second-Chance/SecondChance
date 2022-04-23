@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:second_chance/amplify.dart';
 import 'edit_my_profile_page.dart';
@@ -54,7 +56,7 @@ class MyProfilePageState extends State<MyProfilePage> {
                 image = NetworkImage(result);
               }));
     } catch (_) {
-      image = const NetworkImage('https://picsum.photos/250?image=9');
+      //image = const NetworkImage('https://picsum.photos/250?image=9');
     }
   }
 
@@ -63,21 +65,32 @@ class MyProfilePageState extends State<MyProfilePage> {
       debugPrint("Not refreshing");
       return;
     }
-    setState(() {
-      name = viewUser.Name.toString();
-      gender = viewUser.Gender.toString();
-      birthday = viewUser.Birthday.toString();
-      school = viewUser.School.toString();
-      work = viewUser.Work.toString();
-      image = amplifyState.profilePicture;
+    amplifyState.getUserProfile().then((newUser) {
+      setState(() {
+        viewUser = newUser;
+        name = viewUser.Name.toString();
+        gender = viewUser.Gender.toString();
+        birthday = viewUser.Birthday.toString();
+        school = viewUser.School.toString();
+        work = viewUser.Work.toString();
+        image = amplifyState.profilePicture;
+      });
+      debugPrint("Refreshing");
+
     });
-    debugPrint("Refreshing");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: buildProfile(),
+        body: GestureDetector(
+            child: buildProfile(),
+          onVerticalDragUpdate: (DragUpdateDetails details) {
+            if(details.globalPosition.direction < 1){
+              refreshPage();
+            }
+          },
+      )
     );
   }
 
@@ -190,10 +203,8 @@ class MyProfilePageState extends State<MyProfilePage> {
                   MaterialPageRoute(
                       builder: (context) => EditMyProfilePage(
                             viewUser: viewUser,
-                            // location: location,
                             amplifyState: amplifyState,
-                          )));
-              refreshPage();
+                          ))).then((value) => refreshPage());
             })
             //child: InkWell(onTap: onClicked),
             ),

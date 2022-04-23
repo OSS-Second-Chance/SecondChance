@@ -1,3 +1,4 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'amplify.dart';
@@ -8,7 +9,6 @@ import 'location_page.dart';
 import 'models/ModelProvider.dart';
 import 'models/Location.dart';
 import 'dart:async';
-
 void main() {
   runApp(const MyApp());
 }
@@ -67,6 +67,8 @@ class MyHomePageState extends State<DashboardScreen>
   String AppStage = "Profile";
   late Widget AppState;
   late Future<List<Location>> locations;
+  bool loading = true;
+
   // String dropDownValue;
   // TextEditingController textController;
 
@@ -89,31 +91,25 @@ class MyHomePageState extends State<DashboardScreen>
       setState(() {});
       debugPrint("Selected Index: " + _controller.index.toString());
     });
-    amplifyState.configureAmplify(context, amplifyState, this);
+    amplifyState.configureAmplify(context, amplifyState).then((_) {
+      finishedLoading();
+    });
     // amplifyState.clearLocalDataStore();
   }
 
-  Widget _buildRow(Location curLocation) {
-    return Card(
-        child: ListTile(
-            leading: const Icon(Icons.wine_bar, color: Colors.black, size: 50),
-            title: Text(
-              curLocation.BarName.toString(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-            ),
-            subtitle: Text(curLocation.Region.toString()),
-            trailing: const Icon(Icons.add_location_alt_sharp,
-                color: Colors.orange, size: 40),
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => LocationPage(
-                            location: curLocation,
-                            amplifyState: amplifyState,
-                          )));
-            }));
+  finishedLoading() {
+    Future.wait([tempLocations()]).then((_) {
+      setState(() {
+        loading = false;
+
+      });
+    });
   }
+
+  Future<void> tempLocations() async {
+    locations = amplifyState.getAllLocations();
+  }
+
 
   Widget _buildRowNew(Location curLocation) {
     return Row(
@@ -220,53 +216,69 @@ class MyHomePageState extends State<DashboardScreen>
   }
 
   Widget _buildLocations() {
-    locations = amplifyState.getAllLocations();
-    return FutureBuilder<List<Location>>(
-        future: locations,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            if (snapshot.data!.isEmpty) {
-              return const Text('None');
-            }
-            debugPrint(snapshot.data.toString());
-            return ListView.builder(
+    try {
+      return FutureBuilder<List<Location>>(
+          future: locations,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasData) {
+              if (snapshot.data!.isEmpty) {
+                return ListView.builder(
+                  itemCount: 1,
+                  itemBuilder: (context, i) {
+                    return const Center(
+                        child: Text("Loading... Try Pulling Down to Refresh!"));
+                  },
+                );
+              }
+              debugPrint(snapshot.data.toString());
+              return ListView.builder(
                 // padding: const EdgeInsets.all(16),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
+                  itemCount: (snapshot.data!.length * 2),
+                  itemBuilder: (context, i) {
+                    if (i.isOdd) {
+                      return const Divider();
+                    }
 
-                  final index = i ~/ 2;
-                  return _buildRowNew(snapshot.data![index]);
-                });
-          } else {
-            return ListView.builder(
-              itemCount: 1,
-              itemBuilder: (context, i) {
-                return const Text("Loading... Try Pulling Down to Refresh!");
-              },
-            );
-          }
-        });
+                    final index = i ~/ 2;
+                    return _buildRowNew(snapshot.data![index]);
+                  });
+            } else {
+              return ListView.builder(
+                itemCount: 1,
+                itemBuilder: (context, i) {
+                  return const Center(
+                      child: Text("Loading... Try Pulling Down to Refresh!"));
+                },
+              );
+            }
+          });
+    } on SignedOutException {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
   Widget _buildMyProfilePage() {
-    Future<UserModel> currentUser = amplifyState.getUserProfile();
-    return FutureBuilder<UserModel> (
-      future: currentUser,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
-        } else if (snapshot.hasData) {
-          return MyProfilePage(viewUser: snapshot.requireData, amplifyState: amplifyState);
-        } else {
-          return const Text('Loading');
-        }
-      }
-    );
+    try {
+      Future<dynamic> currentUser = amplifyState.getUserProfile();
+
+      return FutureBuilder<dynamic>(
+          future: currentUser,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasData) {
+              return MyProfilePage(
+                  viewUser: snapshot.requireData, amplifyState: amplifyState);
+            } else {
+              return const Text('Loading');
+            }
+          }
+      );
+    } on SignedOutException {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
   @override
@@ -277,46 +289,56 @@ class MyHomePageState extends State<DashboardScreen>
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return MaterialApp(
-        home: Scaffold(
-            appBar: AppBar(
-                bottom: TabBar(
-                  onTap: (index) {},
-                  controller: _controller,
-                  tabs: list,
-                ),
+    if (loading == true) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    else {
 
-                // Here we take the value from the MyHomePage object that was created by
-                // the App.build method, and use it to set our appbar title.
-                title: Text(widget.title),
-                actions: [
-                  TextButton(
-                      style: TextButton.styleFrom(
-                        primary: Colors.white,
-                      ),
-                      onPressed: () {
-                        amplifyState.signOut();
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => LoginScreen(
-                                    key: null, amplifyState: amplifyState)));
-                      },
-                      child: const Text("Sign Out"))
-                ]),
-            // bottomNavigationBar: menu(),
+      return MaterialApp(
+          home: Scaffold(
+              appBar: AppBar(
+                  bottom: TabBar(
+                    onTap: (index) {},
+                    controller: _controller,
+                    tabs: list,
+                  ),
 
-            body: TabBarView(controller: _controller, children: [
-              RefreshIndicator(child: _buildLocations(),
-                  onRefresh: () {
+                  // Here we take the value from the MyHomePage object that was created by
+                  // the App.build method, and use it to set our appbar title.
+                  title: Text(widget.title),
+                  actions: [
+                    TextButton(
+                        style: TextButton.styleFrom(
+                          primary: Colors.white,
+                        ),
+                        onPressed: () {
+                          amplifyState.signOut();
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => LoginScreen(
+                                      key: null, amplifyState: amplifyState)));
+                        },
+                        child: const Text("Sign Out"))
+                  ]),
+              // bottomNavigationBar: menu(),
+
+              body: TabBarView(controller: _controller, children: [
+                RefreshIndicator(child: _buildLocations(),
+                    onRefresh: () {
                       setState(() {
-                        locations = amplifyState.getAllLocations();
+                        try {
+                          locations = amplifyState.getAllLocations();
+                        } on SignedOutException {
+                          locations = locations;
+                        }
                       });
                       return locations;
-                  }),
-              MatchPage(amplifyState: amplifyState),
-              const MessagingPage(),
-              _buildMyProfilePage()
-            ])));
+                    }),
+                MatchPage(amplifyState: amplifyState),
+                const MessagingPage(),
+                _buildMyProfilePage()
+              ])));
+    }
   }
 }
