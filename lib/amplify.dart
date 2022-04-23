@@ -33,23 +33,6 @@ class AmplifyState {
   late GlobalKey<NavigatorState> navigatorKey;
 
    configureAmplify(BuildContext context, AmplifyState amplifyState) async {
-     StreamSubscription hubSubscription = Amplify.Hub.listen([HubChannel.Auth], (hubEvent) {
-       switch(hubEvent.eventName) {
-         case 'SIGNED_IN':
-           debugPrint('USER IS SIGNED IN');
-           handleSignedIn();
-           break;
-         case 'SIGNED_OUT':
-           debugPrint('USER IS SIGNED OUT');
-           break;
-         case 'SESSION_EXPIRED':
-           debugPrint('SESSION HAS EXPIRED');
-           break;
-         case 'USER_DELETED':
-           debugPrint('USER HAS BEEN DELETED');
-           break;
-       }
-     });
 
      navigatorKey = GlobalKey<NavigatorState>();
     // Add Pinpoint and Cognito Plugins, or any other plugins you want to use
@@ -66,8 +49,37 @@ class AmplifyState {
     try {
       debugPrint("before configure");
       await Amplify.configure(amplifyconfig);
+      StreamSubscription hubSubscription = Amplify.Hub.listen([HubChannel.Auth], (hubEvent) async {
+        switch(hubEvent.eventName) {
+          case 'SIGNED_IN':
+            debugPrint('USER IS SIGNED IN');
+            await handleSignedIn();
+            break;
+          case 'SIGNED_OUT':
+            debugPrint('USER IS SIGNED OUT');
+            await handleSignedOut();
+            break;
+          case 'SESSION_EXPIRED':
+            debugPrint('SESSION HAS EXPIRED');
+            break;
+          case 'USER_DELETED':
+            debugPrint('USER HAS BEEN DELETED');
+            break;
+        }
+      });
       isAmplifyConfigured = true;
       debugPrint("Amplify Configuration Finished");
+      try {
+        await Amplify.Auth.getCurrentUser();
+        await handleSignedIn();
+      } catch (_) {
+        // Not logged in
+        await Amplify.DataStore.stop();
+        Navigator.push(context,
+        MaterialPageRoute(
+            builder: (context) =>
+                LoginScreen(key: null, amplifyState: this)));
+      }
     } on AmplifyAlreadyConfiguredException {
       debugPrint(
           "Tried to reconfigure Amplify; this can occur when your app restarts on Android.");
@@ -93,7 +105,7 @@ class AmplifyState {
     }
   }
 
-  void handleSignedIn() async {
+  handleSignedIn() async {
     await Amplify.DataStore.start();
     getDownloadUrl().then((result) {
       profilePicture = NetworkImage(result);
@@ -101,12 +113,8 @@ class AmplifyState {
 
   }
 
-  void handleSignedOut() async {
+  handleSignedOut() async {
     await Amplify.DataStore.stop();
-    navigatorKey.currentState?.push(
-        MaterialPageRoute(
-            builder: (context) =>
-                LoginScreen(key: null, amplifyState: this)));
   }
 
   Future<String> resendSignUp(String email) async {
@@ -199,7 +207,6 @@ class AmplifyState {
 
       return (allUsers);
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -216,7 +223,6 @@ class AmplifyState {
 
       return (allUsers);
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -261,40 +267,12 @@ class AmplifyState {
     }
   }
 
-  //Test to read entire User List, ignore in production
-  void readAllUsers() async {
-    try {
-      final allUsers = await Amplify.DataStore.query(UserModel.classType);
-
-      debugPrint("Test readall()");
-      debugPrint(allUsers.toString());
-      debugPrint(allUsers.toString());
-      debugPrint("----");
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
-  static void readAllLocations() async {
-    try {
-      List<Location> locations =
-          await Amplify.DataStore.query(Location.classType);
-
-      debugPrint("Test readall() Locations");
-      debugPrint(locations.toString());
-      debugPrint("----");
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
   Future<List<Location>> getAllLocations() async {
     try {
       return Amplify.DataStore.query(Location.classType).then((locations) {
         return (locations);
       });
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -305,7 +283,6 @@ class AmplifyState {
         return (dates);
       });
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -323,7 +300,6 @@ class AmplifyState {
         return (users);
       });
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -336,14 +312,16 @@ class AmplifyState {
 
       return (locations.first);
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
 
   Future getUserProfile() async {
     if (!loggedIn) {
-      return null;
+      navigatorKey.currentState?.push(
+          MaterialPageRoute(
+              builder: (context) =>
+                  LoginScreen(key: null, amplifyState: this)));
     }
      try {
       AuthUser? curUser;
@@ -364,7 +342,6 @@ class AmplifyState {
 
       return activeUser;
     } catch (e) {
-      debugPrint(e.toString());
       return null;
     }
   }
@@ -383,12 +360,11 @@ class AmplifyState {
 
       return thisUser;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
 
-  void updateProfileAttribute(String name, String birthday, String gender, String school, String work) async {
+  Future<UserModel> updateProfileAttribute(String name, String birthday, String gender, String school, String work) async {
     try {
       final userToUpdate = await getUserProfile();
       UserModel updatedUser = userToUpdate;
@@ -396,10 +372,11 @@ class AmplifyState {
       updatedUser = userToUpdate.copyWith(Name: name, Birthday: birthday, Gender: gender, School: school, Work: work);
 
       await Amplify.DataStore.save(updatedUser);
-
+      return updatedUser;
       debugPrint('Updated user profile to ${updatedUser.toString()}');
     } catch (e) {
       debugPrint(e.toString());
+      rethrow;
     }
   }
 
@@ -412,7 +389,6 @@ class AmplifyState {
       debugPrint('Deleted user with Name: ${userToBeDeleted.Name}');
       debugPrint('Deleted user with ID: ${userToBeDeleted.id}');
     } catch (e) {
-      debugPrint(e.toString());
     }
   }
 
@@ -435,7 +411,6 @@ class AmplifyState {
 
       return myMatches;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -466,7 +441,6 @@ class AmplifyState {
       }
       return matchUsers;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -489,7 +463,6 @@ class AmplifyState {
 
       return myAdmirers;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -521,7 +494,6 @@ class AmplifyState {
       }
       return admirerUsers;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -544,7 +516,6 @@ class AmplifyState {
 
       return myRequests;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -925,32 +896,42 @@ class AmplifyState {
 
   void checkDate(DateTime date, Location location) async {
      // Query for date with relationship to given location
-    TemporalDate awsDate = TemporalDate(date);
-    List<Date> dates = await Amplify.DataStore.query(Date.classType,
-                              where: Date.LOCATIONID.eq(location.id).and(Date.DATE.eq(awsDate)));
+    try {
+      TemporalDate awsDate = TemporalDate(date);
+      List<Date> dates = await Amplify.DataStore.query(Date.classType,
+          where: Date.LOCATIONID.eq(location.id).and(Date.DATE.eq(awsDate)));
 
-    // If no relationship is found, create one
-    if (dates.isEmpty) {
-      Date newDate = Date(
-        date: awsDate,
-        locationID: location.id
-      );
+      // If no relationship is found, create one
+      if (dates.isEmpty) {
+        Date newDate = Date(
+            date: awsDate,
+            locationID: location.id
+        );
 
-      await Amplify.DataStore.save(newDate);
+        await Amplify.DataStore.save(newDate);
+      }
+    } catch (_) {
+      return;
     }
   }
 
 
   Future<bool> checkDateUser(Date date, String userid) async {
     // Query for users under this date and check for user
-    UserModel user = await getUserProfile();
-    List<DateUserModel> users = await Amplify.DataStore.query(DateUserModel.classType,
-    where: DateUserModel.DATE.eq(date.id).and(DateUserModel.USERMODEL.eq(user.id)));
-    if (users.isEmpty) {
+    try {
+      UserModel user = await getUserProfile();
+      List<DateUserModel> users = await Amplify.DataStore.query(
+          DateUserModel.classType,
+          where: DateUserModel.DATE.eq(date.id).and(
+              DateUserModel.USERMODEL.eq(user.id)));
+      if (users.isEmpty) {
+        return false;
+      }
+      else {
+        return true;
+      }
+    } catch (_) {
       return false;
-    }
-    else {
-      return true;
     }
   }
 
@@ -998,7 +979,6 @@ class AmplifyState {
         return (allUsers);
 
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -1014,7 +994,6 @@ class AmplifyState {
       return (newLocation[0]);
 
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -1025,7 +1004,6 @@ class AmplifyState {
       curUser = await Amplify.Auth.getCurrentUser();
       return curUser;
     } catch (e) {
-      debugPrint(e.toString());
       rethrow;
     }
   }

@@ -1,3 +1,4 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter/material.dart';
 import 'package:second_chance/models/Location.dart';
 import 'package:second_chance/view_date_users.dart';
@@ -123,37 +124,41 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
     );
   }
   Widget _buildDates() {
-    dates = amplifyState.getAllDates(location);
-    return FutureBuilder<List<Date>>(
-        future: dates,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            if (snapshot.data!.isEmpty) {
-              return const Text('None');
-            }
-            debugPrint(snapshot.data.toString());
-            return ListView.builder(
-              // padding: const EdgeInsets.all(16),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
+    try {
+      dates = amplifyState.getAllDates(location);
+      return FutureBuilder<List<Date>>(
+          future: dates,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasData) {
+              if (snapshot.data!.isEmpty) {
+                return const Text('None');
+              }
+              debugPrint(snapshot.data.toString());
+              return ListView.builder(
+                // padding: const EdgeInsets.all(16),
+                  itemCount: (snapshot.data!.length * 2),
+                  itemBuilder: (context, i) {
+                    if (i.isOdd) {
+                      return const Divider();
+                    }
 
-                  final index = i ~/ 2;
-                  return _buildRow(context, snapshot.data![index]);
-                });
-          } else {
-            return ListView.builder(
-              itemCount: 1,
-              itemBuilder: (context, i) {
-                return const Text("Loading... Try Pulling Down to Refresh!");
-              },
-            );
-          }
-        });
+                    final index = i ~/ 2;
+                    return _buildRow(context, snapshot.data![index]);
+                  });
+            } else {
+              return ListView.builder(
+                itemCount: 1,
+                itemBuilder: (context, i) {
+                  return const Text("Loading... Try Pulling Down to Refresh!");
+                },
+              );
+            }
+          });
+    } on SignedOutException {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
   Widget _buildRow(BuildContext context, Date date) {

@@ -1,3 +1,4 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter/material.dart';
 import 'package:second_chance/models/Location.dart';
 import 'models/Date.dart';
@@ -108,10 +109,11 @@ class _ViewDateUsersState extends State<ViewDateUsers> {
                   setState(() {
                     userText = "Join this List";
                     userJoin = true;
+
                   });
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(
-                        'You have been removed from $date under ${location.BarName}'),
+                        'You have been removed from ${date.date} under ${location.BarName}'),
                   ));
                 } else {
                   amplifyState.addUsertoDate(date, user);
@@ -121,7 +123,7 @@ class _ViewDateUsersState extends State<ViewDateUsers> {
                   });
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(
-                        'You have been added to $date under ${location.BarName}'),
+                        'You have been added to ${date.date} under ${location.BarName}'),
                   ));
                 }
 
@@ -145,16 +147,37 @@ class _ViewDateUsersState extends State<ViewDateUsers> {
     }
   }
 
-  // TODO: Change - Old function for listing all users
   Widget _buildUsers() {
-    users = amplifyState.getUsersFromDate(date);
-    return FutureBuilder<List<UserModel>>(
-        future: users,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            if (snapshot.data!.isEmpty) {
+    try {
+      users = amplifyState.getUsersFromDate(date);
+      return FutureBuilder<List<UserModel>>(
+          future: users,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasData) {
+              if (snapshot.data!.isEmpty) {
+                return ListView.builder(
+                  itemCount: 1,
+                  itemBuilder: (context, i) {
+                    return const Text(
+                        "Loading... Try Pulling Down to Refresh!");
+                  },
+                );
+              }
+              debugPrint(snapshot.data.toString());
+              return ListView.builder(
+                // padding: const EdgeInsets.all(16),
+                  itemCount: (snapshot.data!.length * 2),
+                  itemBuilder: (context, i) {
+                    if (i.isOdd) {
+                      return const Divider();
+                    }
+
+                    final index = i ~/ 2;
+                    return _buildRow(context, snapshot.data![index]);
+                  });
+            } else {
               return ListView.builder(
                 itemCount: 1,
                 itemBuilder: (context, i) {
@@ -162,27 +185,10 @@ class _ViewDateUsersState extends State<ViewDateUsers> {
                 },
               );
             }
-            debugPrint(snapshot.data.toString());
-            return ListView.builder(
-              // padding: const EdgeInsets.all(16),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRow(context, snapshot.data![index]);
-                });
-          } else {
-            return ListView.builder(
-              itemCount: 1,
-              itemBuilder: (context, i) {
-                return const Text("Loading... Try Pulling Down to Refresh!");
-              },
-            );
-          }
-        });
+          });
+    } on SignedOutException {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
   Widget buildImage(UserModel user) {
@@ -209,7 +215,6 @@ class _ViewDateUsersState extends State<ViewDateUsers> {
         });
   }
 
-  // TODO: User for user iterators in DateViewer
   Widget _buildRow(BuildContext context, UserModel thisUser) {
     return Card(
         child: ListTile(

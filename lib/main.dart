@@ -110,6 +110,7 @@ class MyHomePageState extends State<DashboardScreen>
     locations = amplifyState.getAllLocations();
   }
 
+
   Widget _buildRowNew(Location curLocation) {
     return Row(
       mainAxisSize: MainAxisSize.max,
@@ -215,41 +216,47 @@ class MyHomePageState extends State<DashboardScreen>
   }
 
   Widget _buildLocations() {
-    return FutureBuilder<List<Location>>(
-        future: locations,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
-          } else if (snapshot.hasData) {
-            if (snapshot.data!.isEmpty) {
+    try {
+      return FutureBuilder<List<Location>>(
+          future: locations,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasData) {
+              if (snapshot.data!.isEmpty) {
+                return ListView.builder(
+                  itemCount: 1,
+                  itemBuilder: (context, i) {
+                    return const Center(
+                        child: Text("Loading... Try Pulling Down to Refresh!"));
+                  },
+                );
+              }
+              debugPrint(snapshot.data.toString());
+              return ListView.builder(
+                // padding: const EdgeInsets.all(16),
+                  itemCount: (snapshot.data!.length * 2),
+                  itemBuilder: (context, i) {
+                    if (i.isOdd) {
+                      return const Divider();
+                    }
+
+                    final index = i ~/ 2;
+                    return _buildRowNew(snapshot.data![index]);
+                  });
+            } else {
               return ListView.builder(
                 itemCount: 1,
                 itemBuilder: (context, i) {
-                  return const Center(child: Text("Loading... Try Pulling Down to Refresh!"));
+                  return const Center(
+                      child: Text("Loading... Try Pulling Down to Refresh!"));
                 },
               );
             }
-            debugPrint(snapshot.data.toString());
-            return ListView.builder(
-              // padding: const EdgeInsets.all(16),
-                itemCount: (snapshot.data!.length * 2),
-                itemBuilder: (context, i) {
-                  if (i.isOdd) {
-                    return const Divider();
-                  }
-
-                  final index = i ~/ 2;
-                  return _buildRowNew(snapshot.data![index]);
-                });
-          } else {
-            return ListView.builder(
-              itemCount: 1,
-              itemBuilder: (context, i) {
-                return const Center(child: Text("Loading... Try Pulling Down to Refresh!"));
-              },
-            );
-          }
-        });
+          });
+    } on SignedOutException {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
   Widget _buildMyProfilePage() {
@@ -320,7 +327,11 @@ class MyHomePageState extends State<DashboardScreen>
                 RefreshIndicator(child: _buildLocations(),
                     onRefresh: () {
                       setState(() {
-                        locations = amplifyState.getAllLocations();
+                        try {
+                          locations = amplifyState.getAllLocations();
+                        } on SignedOutException {
+                          locations = locations;
+                        }
                       });
                       return locations;
                     }),
