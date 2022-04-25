@@ -880,19 +880,6 @@ class AmplifyState {
   }
 
 
-  void updateLocation(Location location, String? barUsers) async {
-    try {
-
-      Location newLocation;
-      newLocation = location.copyWith(BarUsers: barUsers);
-
-      await Amplify.DataStore.save(newLocation);
-
-      debugPrint('Updated Location to ${newLocation.toString()}');
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
 
   void checkDate(DateTime date, Location location) async {
      // Query for date with relationship to given location
