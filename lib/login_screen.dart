@@ -65,7 +65,7 @@ class _LoginState extends State<LoginScreen> {
     debugPrint('in confirmSignUp error: $code data: $data');
 
     String error = '';
-    amplifyState
+    return amplifyState
         .confirmSignUp(data.name.toString(), code.toString())
         .then((result) {
       debugPrint("In confirmsignup Future return");
@@ -87,6 +87,7 @@ class _LoginState extends State<LoginScreen> {
         });
       } else {
         error += "\nSignup Error: " + result;
+        return error;
       }
     });
   }

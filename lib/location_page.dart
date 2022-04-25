@@ -85,7 +85,6 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
               'Selected: ${_selectedDate.value.day}/${_selectedDate.value.month}/${_selectedDate.value.year}'),
         ));
 
-
         // Create new date object if none exist
         amplifyState.checkDate(_selectedDate.value, location);
         //amplifyState.updateLocation(location, json.encode(dates));
@@ -123,6 +122,7 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
+
   Widget _buildDates() {
     try {
       dates = amplifyState.getAllDates(location);
@@ -137,7 +137,7 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
               }
               debugPrint(snapshot.data.toString());
               return ListView.builder(
-                // padding: const EdgeInsets.all(16),
+                  // padding: const EdgeInsets.all(16),
                   itemCount: (snapshot.data!.length * 2),
                   itemBuilder: (context, i) {
                     if (i.isOdd) {
@@ -164,12 +164,14 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
   Widget _buildRow(BuildContext context, Date date) {
     return Card(
         child: ListTile(
-            title: Text(date.date.toString(),
+            title: Text(
+                DateFormat('EEEE, MMM d')
+                    .format(DateTime.parse(date.date.toString())),
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
             onTap: () {
               Navigator.push(
-                 context,
+                  context,
                   MaterialPageRoute(
                       builder: (context) => ViewDateUsers(
                           location: location,
