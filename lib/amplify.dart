@@ -369,8 +369,7 @@ class AmplifyState {
       final userToUpdate = await getUserProfile();
       UserModel updatedUser = userToUpdate;
 
-      updatedUser = userToUpdate.copyWith(Name: name, Birthday: birthday, Gender: gender, School: school, Work: work);
-
+      updatedUser = userToUpdate.copyWith(Name: name, Birthday: birthday, Gender: gender, School: school, Work: work, Age: 0, Bio: ' ');
       await Amplify.DataStore.save(updatedUser);
       return updatedUser;
       debugPrint('Updated user profile to ${updatedUser.toString()}');
