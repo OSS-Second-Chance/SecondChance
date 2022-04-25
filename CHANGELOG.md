@@ -1,5 +1,5 @@
-ADD: Licence
-ADD: Edit Profile Functionality and Page
-ADD: Check-in Feature
-FIX: Refresh on Pulldown
-FIX: Local Database clear on app Launch
+ADD: Check-In with Data Relationships
+ADD: Better listing of dates
+ADD: Better Sign-In/Sign-Out handling
+ADD: DataStore Stop/Start Logic
+BUGFIX: Proper handling in Confirm-Signup with verification codes
