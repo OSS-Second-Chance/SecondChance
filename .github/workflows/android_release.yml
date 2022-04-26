@@ -46,7 +46,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         # Install Amplify, download remote backend configuration, build the flutter release
         run: |
-          ./amplify.sh --appid d30wx1kvbjtgdy --envName production --accessKey "$AWS_ACCESS_KEY_ID" --secretKey "$AWS_SECRET_ACCESS_KEY"
+          ./amplify.sh --appid d30wx1kvbjtgdy --envName demo --accessKey "$AWS_ACCESS_KEY_ID" --secretKey "$AWS_SECRET_ACCESS_KEY"
           flutter pub get
 
       - name: Build App
