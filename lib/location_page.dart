@@ -1,9 +1,12 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter/material.dart';
 import 'package:second_chance/models/Location.dart';
 import 'package:second_chance/view_date_users.dart';
 import 'amplify.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
+
+import 'models/Date.dart';
 
 class LocationPage extends StatefulWidget {
   const LocationPage(
@@ -27,8 +30,8 @@ class LocationPage extends StatefulWidget {
 class _LocationState extends State<LocationPage> with RestorationMixin {
   final Location location;
   final AmplifyState amplifyState;
-  late Map<String, dynamic> dates;
   _LocationState(this.location, this.amplifyState);
+  late Future<List<Date>> dates;
 
   // NOTE: DatePicker code from flutter example - https://api.flutter.dev/flutter/material/showDatePicker.html
   @override
@@ -82,30 +85,13 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
               'Selected: ${_selectedDate.value.day}/${_selectedDate.value.month}/${_selectedDate.value.year}'),
         ));
 
-        debugPrint(
-            "Dates: ${dates['${_selectedDate.value.year}-${_selectedDate.value.month}-${_selectedDate.value.day}']}");
-        if (dates[
-                '${_selectedDate.value.year}-${_selectedDate.value.month}-${_selectedDate.value.day}'] ==
-            null) {
-          dates['${_selectedDate.value.year}-${_selectedDate.value.month}-${_selectedDate.value.day}'] =
-              [];
-          debugPrint("Json Dates: ${dates.toString()}");
-          amplifyState.updateLocation(location, json.encode(dates));
-        }
+        // Create new date object if none exist
+        amplifyState.checkDate(_selectedDate.value, location);
+        //amplifyState.updateLocation(location, json.encode(dates));
       });
     }
   }
   // NOTE: END DATEPICKER CODE
-
-  @override
-  initState() {
-    super.initState();
-    if (jsonDecode(location.BarUsers.toString()) != null) {
-      dates = json.decode(location.BarUsers.toString());
-    } else {
-      dates = {};
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,17 +107,10 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
       body: RefreshIndicator(
           child: _buildDates(),
           onRefresh: () {
-            return amplifyState
-                .refreshLocation(location)
-                .then((updatedLocation) {
-              setState(() {
-                if (jsonDecode(updatedLocation.BarUsers.toString()) != null) {
-                  dates = json.decode(updatedLocation.BarUsers.toString());
-                } else {
-                  dates = {};
-                }
-              });
+            setState(() {
+              dates = amplifyState.getAllDates(location);
             });
+            return dates;
           }),
       // Button for adding a new date
       floatingActionButton: FloatingActionButton(
@@ -145,23 +124,49 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
   }
 
   Widget _buildDates() {
-    return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: (dates.length * 2),
-        itemBuilder: (context, i) {
-          if (i.isOdd) {
-            return const Divider();
-          }
+    try {
+      dates = amplifyState.getAllDates(location);
+      return FutureBuilder<List<Date>>(
+          future: dates,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasData) {
+              if (snapshot.data!.isEmpty) {
+                return const Text('None');
+              }
+              debugPrint(snapshot.data.toString());
+              return ListView.builder(
+                  // padding: const EdgeInsets.all(16),
+                  itemCount: (snapshot.data!.length * 2),
+                  itemBuilder: (context, i) {
+                    if (i.isOdd) {
+                      return const Divider();
+                    }
 
-          final index = i ~/ 2;
-          return _buildRow(context, dates.keys.elementAt(index));
-        });
+                    final index = i ~/ 2;
+                    return _buildRow(context, snapshot.data![index]);
+                  });
+            } else {
+              return ListView.builder(
+                itemCount: 1,
+                itemBuilder: (context, i) {
+                  return const Text("Loading... Try Pulling Down to Refresh!");
+                },
+              );
+            }
+          });
+    } on SignedOutException {
+      return const Center(child: CircularProgressIndicator());
+    }
   }
 
-  Widget _buildRow(BuildContext context, String date) {
+  Widget _buildRow(BuildContext context, Date date) {
     return Card(
         child: ListTile(
-            title: Text(date,
+            title: Text(
+                DateFormat('EEEE, MMM d')
+                    .format(DateTime.parse(date.date.toString())),
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
             onTap: () {
@@ -170,7 +175,6 @@ class _LocationState extends State<LocationPage> with RestorationMixin {
                   MaterialPageRoute(
                       builder: (context) => ViewDateUsers(
                           location: location,
-                          dates: dates,
                           date: date,
                           amplifyState: amplifyState)));
             }));
