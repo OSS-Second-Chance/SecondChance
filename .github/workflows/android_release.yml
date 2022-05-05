@@ -55,16 +55,16 @@ jobs:
           flutter build appbundle
           flutter build apk --split-per-abi
 
-      - name: Run Integration Tests
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          script:
-            flutter drive --driver="./test_driver/integration_test.dart" --target="./integration_test/amplify_test.dart"
+#      - name: Run Integration Tests
+#        uses: reactivecircus/android-emulator-runner@v2
+#        with:
+#          api-level: 29
+#          script:
+#            flutter drive --driver="./test_driver/integration_test.dart" --target="./integration_test/amplify_test.dart"
 
-      - name: Run Unit Tests
-        shell: bash
-        run: flutter test --coverage
+#      - name: Run Unit Tests
+#        shell: bash
+#        run: flutter test --coverage
        
 #       - name: Analyze
 #         run: flutter analyze
